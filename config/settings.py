@@ -34,10 +34,12 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
+    'storages',
 
     # Local apps
     'apps.core',
     'apps.users',
+    'apps.products',
 ]
 
 MIDDLEWARE = [
@@ -205,11 +207,48 @@ USE_I18N = True
 USE_TZ = True
 
 # ──────────────────────────────────────────────
+# Cloudflare R2 (S3-Compatible) Storage
+# ──────────────────────────────────────────────
+R2_ENDPOINT = config('R2_ENDPOINT', default='')
+R2_ACCESS_KEY_ID = config('R2_ACCESS_KEY_ID', default='')
+R2_SECRET_ACCESS_KEY = config('R2_SECRET_ACCESS_KEY', default='')
+R2_BUCKET_NAME = config('R2_BUCKET_NAME', default='')
+R2_REGION = config('R2_REGION', default='auto')
+R2_CUSTOM_DOMAIN = config('R2_CUSTOM_DOMAIN', default='')
+
+if R2_ACCESS_KEY_ID:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+            'OPTIONS': {
+                'access_key': R2_ACCESS_KEY_ID,
+                'secret_key': R2_SECRET_ACCESS_KEY,
+                'bucket_name': R2_BUCKET_NAME,
+                'endpoint_url': R2_ENDPOINT,
+                'region_name': R2_REGION,
+                'default_acl': None,
+                'signature_version': 's3v4',
+                'object_parameters': {
+                    'CacheControl': 'max-age=86400',
+                },
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+    if R2_CUSTOM_DOMAIN:
+        MEDIA_URL = f'https://{R2_CUSTOM_DOMAIN}/'
+    else:
+        MEDIA_URL = f'{R2_ENDPOINT}/{R2_BUCKET_NAME}/'
+
+# ──────────────────────────────────────────────
 # Static & Media
 # ──────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = '/media/'
+if not R2_ACCESS_KEY_ID:
+    MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ──────────────────────────────────────────────
