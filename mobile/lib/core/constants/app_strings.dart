@@ -42,6 +42,64 @@ class AppStrings {
   static const sessionExpired = 'Session expired. Please log in again.';
   static const retry = 'Retry';
 
+  // Home
+  static const todaysSpecials = "Today's Specials";
+  static const viewAll = 'View All';
+  static const allProducts = 'All Products';
+
+  // Search
+  static const searchProducts = 'Search products...';
+  static const recentSearches = 'Recent Searches';
+  static const clearAll = 'Clear All';
+  static const noResults = 'No results found';
+  static const noResultsSubtitle = 'Try different keywords or remove filters.';
+  static const trendingSearches = 'Trending Searches';
+
+  // Products
+  static const addToCart = 'Add to Cart';
+  static const buyNow = 'Buy Now';
+  static const outOfStock = 'Out of Stock';
+  static const inStock = 'In Stock';
+  static const onlyLeftInStock = 'Only %d left in stock';
+  static const selectSize = 'Select Size';
+  static const selectColor = 'Select Color';
+  static const description = 'Description';
+  static const readMore = 'Read More';
+  static const readLess = 'Read Less';
+  static const reviews = 'Reviews';
+  static const noProducts = 'No products found';
+  static const noProductsSubtitle = 'Try adjusting your filters or search.';
+
+  // Filters
+  static const filters = 'Filters';
+  static const applyFilters = 'Apply Filters';
+  static const clearFilters = 'Clear All';
+  static const sortBy = 'Sort By';
+  static const priceRange = 'Price Range';
+  static const dietType = 'Diet Type';
+  static const cuisine = 'Cuisine';
+  static const gender = 'Gender';
+  static const sizeLabel = 'Size';
+  static const colorLabel = 'Color';
+  static const materialLabel = 'Material';
+  static const clothingType = 'Type';
+  static const sortNewest = 'Newest';
+  static const sortPriceLow = 'Price: Low to High';
+  static const sortPriceHigh = 'Price: High to Low';
+  static const sortRating = 'Highest Rated';
+  static const sortPopular = 'Most Popular';
+
+  // Nutrition
+  static const nutritionInfo = 'Nutrition Info';
+  static const prepTime = 'Prep Time';
+  static const allergens = 'Allergens';
+  static const servingSize = 'Serving Size';
+
+  // Clothing Details
+  static const materialInfo = 'Material';
+  static const careInstructions = 'Care Instructions';
+  static const fitType = 'Fit';
+
   // General
   static const cancel = 'Cancel';
   static const save = 'Save';

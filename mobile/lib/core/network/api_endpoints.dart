@@ -24,8 +24,16 @@ class ApiEndpoints {
   static const products = '/products/';
   static String productDetail(String slug) => '/products/$slug/';
   static const featuredProducts = '/products/featured/';
+  static String productView(String slug) => '/products/$slug/view/';
+  static String productVariants(String slug) => '/products/$slug/variants/';
   static const categories = '/categories/';
   static const categoryTree = '/categories/tree/';
+  static String categoryDetail(String slug) => '/categories/$slug/';
+  static const brands = '/brands/';
+
+  // Search
+  static const search = '/search/';
+  static const searchSuggestions = '/search/suggestions/';
 
   // Cart
   static const cart = '/cart/';

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/domain/models/auth_state.dart';
@@ -6,9 +6,21 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/cart/presentation/screens/cart_placeholder_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/product/presentation/screens/category_listing_screen.dart';
+import '../../features/product/presentation/screens/product_detail_screen.dart';
+import '../../features/profile/presentation/screens/profile_placeholder_screen.dart';
+import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/shell/presentation/screens/main_shell.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import 'route_names.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+final _searchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'search');
+final _cartNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'cart');
+final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 
 // Notifies GoRouter when auth state changes — without recreating the router
 class _AuthRouterNotifier extends ChangeNotifier {
@@ -21,25 +33,19 @@ final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRouterNotifier(ref);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: true,
     refreshListenable: notifier,
     redirect: (context, state) {
-      // READ (not watch) — router instance stays stable
       final authState = ref.read(authProvider);
       final isAuthenticated = authState is AuthAuthenticated;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == RouteNames.splash;
 
-      // Always allow splash to handle its own navigation
       if (isSplash) return null;
-
-      // If not authenticated and trying to access protected route
       if (!isAuthenticated && !isAuthRoute) return RouteNames.login;
-
-      // If authenticated and trying to access auth route
       if (isAuthenticated && isAuthRoute) return RouteNames.home;
-
       return null;
     },
     routes: [
@@ -59,9 +65,79 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteNames.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
+
+      // Main shell with bottom navigation
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainShell(navigationShell: navigationShell);
+        },
+        branches: [
+          // Home tab
+          StatefulShellBranch(
+            navigatorKey: _homeNavigatorKey,
+            routes: [
+              GoRoute(
+                path: RouteNames.home,
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          // Search tab
+          StatefulShellBranch(
+            navigatorKey: _searchNavigatorKey,
+            routes: [
+              GoRoute(
+                path: RouteNames.search,
+                builder: (context, state) => const SearchScreen(),
+              ),
+            ],
+          ),
+          // Cart tab
+          StatefulShellBranch(
+            navigatorKey: _cartNavigatorKey,
+            routes: [
+              GoRoute(
+                path: RouteNames.cart,
+                builder: (context, state) => const CartPlaceholderScreen(),
+              ),
+            ],
+          ),
+          // Profile tab
+          StatefulShellBranch(
+            navigatorKey: _profileNavigatorKey,
+            routes: [
+              GoRoute(
+                path: RouteNames.profile,
+                builder: (context, state) =>
+                    const ProfilePlaceholderScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Product detail (full-screen, outside shell)
       GoRoute(
-        path: RouteNames.home,
-        builder: (context, state) => const HomeScreen(),
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/products/:slug',
+        builder: (context, state) {
+          final slug = state.pathParameters['slug']!;
+          return ProductDetailScreen(slug: slug);
+        },
+      ),
+
+      // Category listing (full-screen, outside shell)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/categories/:slug',
+        builder: (context, state) {
+          final slug = state.pathParameters['slug']!;
+          final name = state.uri.queryParameters['name'];
+          return CategoryListingScreen(
+            categorySlug: slug,
+            categoryName: name,
+          );
+        },
       ),
     ],
   );

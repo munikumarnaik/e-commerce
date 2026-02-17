@@ -31,6 +31,10 @@ dependencies:
   google_fonts: ^6.3.0
   flutter_animate: ^4.5.2
   cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  carousel_slider: ^5.0.0
+  smooth_page_indicator: ^1.2.0
 
   # Environment
   flutter_dotenv: ^6.0.0

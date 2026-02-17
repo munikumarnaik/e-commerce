@@ -1,196 +1,156 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../../shared/widgets/search_bar_shortcut.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../product/presentation/providers/product_list_provider.dart';
+import '../widgets/banner_carousel.dart';
+import '../widgets/category_chips_row.dart';
+import '../widgets/category_toggle.dart';
+import '../widgets/featured_products_section.dart';
+import '../widgets/home_greeting.dart';
+import '../widgets/product_grid_section.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final category = ref.watch(activeCategoryProvider);
-    final themeMode = ref.watch(themeModeProvider);
     final authState = ref.watch(authProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
-    final userName = authState is AuthAuthenticated
-        ? authState.user.firstName
-        : 'Guest';
+    final userName =
+        authState is AuthAuthenticated ? authState.user.firstName : 'Guest';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.appName),
-        actions: [
-          // Theme mode toggle
-          IconButton(
-            icon: Icon(
-              themeMode == ThemeMode.dark
-                  ? Icons.light_mode_rounded
-                  : Icons.dark_mode_rounded,
-            ),
-            onPressed: () {
-              ref.read(themeModeProvider.notifier).state =
-                  themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      body: SafeArea(
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is ScrollEndNotification &&
+                notification.metrics.extentAfter < 300) {
+              ref.read(homeProductListProvider.notifier).loadMore();
+            }
+            return false;
+          },
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(homeProductListProvider);
             },
-          ),
-          // Logout
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => _showLogoutDialog(context, ref),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppDimensions.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hello, $userName!',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.sm),
-            Text(
-              'What are you looking for today?',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.xl),
-
-            // Category toggle
-            Row(
-              children: [
-                _CategoryChip(
-                  label: 'Food',
-                  icon: Icons.restaurant_rounded,
-                  isSelected: category == AppCategory.food,
-                  onTap: () => ref.read(activeCategoryProvider.notifier).state =
-                      AppCategory.food,
+            child: CustomScrollView(
+              slivers: [
+                // App bar
+                SliverAppBar(
+                  floating: true,
+                  title: Text(AppStrings.appName),
+                  actions: [
+                    IconButton(
+                      icon: Icon(
+                        themeMode == ThemeMode.dark
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                      ),
+                      onPressed: () {
+                        ref.read(themeModeProvider.notifier).state =
+                            themeMode == ThemeMode.dark
+                                ? ThemeMode.light
+                                : ThemeMode.dark;
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.notifications_none_rounded),
+                      onPressed: () {},
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppDimensions.md),
-                _CategoryChip(
-                  label: 'Clothing',
-                  icon: Icons.checkroom_rounded,
-                  isSelected: category == AppCategory.clothing,
-                  onTap: () => ref.read(activeCategoryProvider.notifier).state =
-                      AppCategory.clothing,
+
+                // Greeting
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.sm),
+                    child: HomeGreeting(userName: userName),
+                  ),
+                ),
+
+                // Category toggle
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: AppDimensions.lg),
+                    child: CategoryToggle(),
+                  ),
+                ),
+
+                // Search bar
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppDimensions.md,
+                      AppDimensions.lg,
+                      AppDimensions.md,
+                      0,
+                    ),
+                    child: SearchBarShortcut(
+                      onTap: () => context.push('/search'),
+                    ),
+                  ),
+                ),
+
+                // Banner carousel
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.lg),
+                    child: BannerCarousel(category: category),
+                  ),
+                ),
+
+                // Category chips
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.lg),
+                    child: CategoryChipsRow(
+                      onCategoryTap: (cat) {
+                        context.push('/categories/${cat.slug}');
+                      },
+                    ),
+                  ),
+                ),
+
+                // Featured products
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.lg),
+                    child: FeaturedProductsSection(
+                      onProductTap: (product) {
+                        context.push('/products/${product.slug}');
+                      },
+                    ),
+                  ),
+                ),
+
+                // All products grid
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.lg),
+                    child: ProductGridSection(
+                      onProductTap: (product) {
+                        context.push('/products/${product.slug}');
+                      },
+                    ),
+                  ),
+                ),
+
+                // Bottom spacing
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppDimensions.xxl),
                 ),
               ],
             ),
-
-            const Spacer(),
-
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.construction_rounded,
-                    size: 64,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                  ),
-                  const SizedBox(height: AppDimensions.md),
-                  Text(
-                    'More features coming soon!',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const Spacer(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text(AppStrings.logout),
-        content: const Text(AppStrings.logoutConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(AppStrings.cancel),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ref.read(authProvider.notifier).logout();
-            },
-            child: Text(
-              AppStrings.logout,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _CategoryChip({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.lg,
-          vertical: AppDimensions.md,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: AppDimensions.sm),
-            Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
         ),
       ),
     );
