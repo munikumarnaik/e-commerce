@@ -18,4 +18,9 @@ urlpatterns = [
     path('users/me/', views.UserProfileView.as_view(), name='user-profile'),
     path('users/me/change-password/', views.ChangePasswordView.as_view(), name='change-password'),
     path('users/me/fcm-token/', views.FCMTokenView.as_view(), name='fcm-token'),
+
+    # Addresses
+    path('addresses/', views.AddressListCreateView.as_view(), name='address-list-create'),
+    path('addresses/<uuid:address_id>/', views.AddressDetailView.as_view(), name='address-detail'),
+    path('addresses/<uuid:address_id>/set-default/', views.AddressSetDefaultView.as_view(), name='address-set-default'),
 ]

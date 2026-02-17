@@ -15,14 +15,25 @@ def custom_exception_handler(exc, context):
             if 'detail' in response.data:
                 message = str(response.data['detail'])
             else:
-                errors = response.data
-                message = 'Validation error'
+                formatted_errors = {}
+
+                for field, value in response.data.items():
+                    if isinstance(value, list) and len(value) > 0:
+                        formatted_errors[field] = str(value[0])  # take first error
+                    else:
+                        formatted_errors[field] = str(value)
+
+                errors = formatted_errors
+                message = "Validation error"
+                # errors = response.data
+                # message = 'Validation error'
         elif isinstance(response.data, list):
             message = response.data[0] if response.data else 'An error occurred'
 
         response.data = {
             'success': False,
             'data': None,
+            'status': response.status_code,
             'message': message,
             'errors': errors,
         }

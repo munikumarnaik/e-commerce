@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.users.models import User
+from apps.users.models import Address, User
 from apps.users.services import (
     create_email_verification_token,
     create_password_reset_token,
@@ -16,6 +16,8 @@ from apps.users.services import (
 )
 
 from .serializers import (
+    AddressCreateSerializer,
+    AddressSerializer,
     ChangePasswordSerializer,
     EmailVerifySerializer,
     FCMTokenSerializer,
@@ -53,6 +55,7 @@ class RegisterView(APIView):
 
         return Response({
             'success': True,
+            'status': status.HTTP_201_CREATED,
             'data': {
                 'user': UserSerializer(user).data,
                 'tokens': tokens,
@@ -77,6 +80,7 @@ class LoginView(APIView):
 
         return Response({
             'success': True,
+            'status': status.HTTP_200_OK,
             'data': {
                 'user': UserSerializer(user).data,
                 'tokens': tokens,
@@ -98,6 +102,7 @@ class LogoutView(APIView):
         except Exception:
             return Response({
                 'success': False,
+                'status': status.HTTP_400_BAD_REQUEST,
                 'message': 'Invalid refresh token.',
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -247,4 +252,87 @@ class FCMTokenView(APIView):
         return Response({
             'success': True,
             'message': 'FCM token updated successfully',
+        })
+
+
+# ──────────────────────────────────────────────
+# Address Views
+# ──────────────────────────────────────────────
+class AddressListCreateView(APIView):
+    """GET /addresses/ — List addresses. POST /addresses/ — Create address."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        addresses = Address.objects.filter(user=request.user, is_active=True)
+        is_default = request.query_params.get('is_default')
+        if is_default is not None:
+            addresses = addresses.filter(is_default=is_default.lower() == 'true')
+        serializer = AddressSerializer(addresses, many=True)
+        return Response({
+            'success': True,
+            'data': {'count': addresses.count(), 'results': serializer.data},
+        })
+
+    def post(self, request, *args, **kwargs):
+        serializer = AddressCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        address = serializer.save(user=request.user)
+        return Response({
+            'success': True,
+            'data': AddressSerializer(address).data,
+            'message': 'Address created successfully.',
+        }, status=status.HTTP_201_CREATED)
+
+
+class AddressDetailView(APIView):
+    """PATCH /addresses/{id}/ — Update. DELETE /addresses/{id}/ — Soft delete."""
+    permission_classes = [IsAuthenticated]
+
+    def _get_address(self, request, address_id):
+        try:
+            return Address.objects.get(id=address_id, user=request.user, is_active=True)
+        except Address.DoesNotExist:
+            return None
+
+    def patch(self, request, *args, **kwargs):
+        address = self._get_address(request, kwargs.get('address_id'))
+        if not address:
+            return Response({'success': False, 'message': 'Address not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AddressCreateSerializer(address, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({
+            'success': True,
+            'data': AddressSerializer(address).data,
+            'message': 'Address updated successfully.',
+        })
+
+    def delete(self, request, *args, **kwargs):
+        address = self._get_address(request, kwargs.get('address_id'))
+        if not address:
+            return Response({'success': False, 'message': 'Address not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        address.is_active = False
+        address.save(update_fields=['is_active', 'updated_at'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AddressSetDefaultView(APIView):
+    """POST /addresses/{id}/set-default/ — Set as default address."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            address = Address.objects.get(
+                id=kwargs.get('address_id'), user=request.user, is_active=True,
+            )
+        except Address.DoesNotExist:
+            return Response({'success': False, 'message': 'Address not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        address.is_default = True
+        address.save()
+        return Response({
+            'success': True,
+            'message': 'Default address updated successfully.',
         })

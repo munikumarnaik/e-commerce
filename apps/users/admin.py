@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import EmailVerificationToken, PasswordResetToken, User
+from .models import Address, EmailVerificationToken, PasswordResetToken, User
 
 
 @admin.register(User)
@@ -44,3 +44,12 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
     list_filter = ('is_used',)
     search_fields = ('user__email',)
     readonly_fields = ('created_at',)
+
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ('user', 'full_name', 'address_type', 'city', 'state', 'is_default', 'is_active')
+    list_filter = ('address_type', 'is_default', 'is_active', 'state')
+    search_fields = ('user__email', 'full_name', 'city', 'postal_code')
+    raw_id_fields = ('user',)
+    readonly_fields = ('created_at', 'updated_at')

@@ -72,6 +72,73 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.role == self.Role.CUSTOMER
 
 
+class Address(models.Model):
+    class AddressType(models.TextChoices):
+        HOME = 'HOME', 'Home'
+        WORK = 'WORK', 'Work'
+        OTHER = 'OTHER', 'Other'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+
+    address_type = models.CharField(max_length=20, choices=AddressType.choices, default=AddressType.HOME)
+
+    # Contact
+    full_name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=15)
+
+    # Address components
+    address_line1 = models.CharField(max_length=255)
+    address_line2 = models.CharField(max_length=255, blank=True, default='')
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100, default='India')
+    postal_code = models.CharField(max_length=10)
+
+    # Geolocation
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    # Flags
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'addresses'
+        verbose_name_plural = 'addresses'
+        ordering = ['-is_default', '-created_at']
+        indexes = [
+            models.Index(fields=['user'], name='idx_addresses_user'),
+            models.Index(fields=['user', 'is_default'], name='idx_addresses_user_default'),
+            models.Index(fields=['postal_code'], name='idx_addresses_postal_code'),
+        ]
+
+    def __str__(self):
+        return f'{self.full_name} - {self.address_line1}, {self.city}'
+
+    def save(self, *args, **kwargs):
+        # If setting as default, unset other defaults for this user
+        if self.is_default:
+            Address.objects.filter(user=self.user, is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+    def to_snapshot(self):
+        """Return a JSON-serializable dict for order address snapshot."""
+        return {
+            'full_name': self.full_name,
+            'phone': self.phone,
+            'address_line1': self.address_line1,
+            'address_line2': self.address_line2,
+            'city': self.city,
+            'state': self.state,
+            'country': self.country,
+            'postal_code': self.postal_code,
+        }
+
+
 class EmailVerificationToken(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_tokens')

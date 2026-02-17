@@ -115,6 +115,52 @@ class CartClearView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class CartApplyCouponView(APIView):
+    """POST /cart/apply-coupon/ — Apply a coupon code to the cart."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        from apps.orders.api.serializers import ApplyCouponSerializer
+        from apps.orders.services import apply_coupon_to_cart
+
+        serializer = ApplyCouponSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        coupon, discount, cart = apply_coupon_to_cart(
+            user=request.user,
+            coupon_code=serializer.validated_data['coupon_code'],
+        )
+
+        return Response({
+            'success': True,
+            'data': {
+                'coupon': {
+                    'code': coupon.code,
+                    'discount_type': coupon.discount_type,
+                    'discount_value': str(coupon.discount_value),
+                },
+                'discount': str(discount),
+                'total': str(cart.total),
+            },
+            'message': 'Coupon applied successfully.',
+        })
+
+
+class CartRemoveCouponView(APIView):
+    """DELETE /cart/remove-coupon/ — Remove applied coupon from cart."""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        from apps.orders.services import remove_coupon_from_cart
+
+        cart = remove_coupon_from_cart(user=request.user)
+        return Response({
+            'success': True,
+            'data': {'total': str(cart.total)},
+            'message': 'Coupon removed.',
+        })
+
+
 # ──────────────────────────────────────────────
 # Wishlist Views
 # ──────────────────────────────────────────────

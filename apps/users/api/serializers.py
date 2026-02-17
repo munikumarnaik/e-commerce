@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from apps.users.models import User
+from apps.users.models import Address, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -106,3 +106,34 @@ class FCMTokenSerializer(serializers.Serializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+# ──────────────────────────────────────────────
+# Address Serializers
+# ──────────────────────────────────────────────
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = [
+            'id', 'address_type', 'full_name', 'phone',
+            'address_line1', 'address_line2', 'city', 'state',
+            'country', 'postal_code', 'latitude', 'longitude',
+            'is_default', 'is_active', 'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
+
+
+class AddressCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = [
+            'address_type', 'full_name', 'phone',
+            'address_line1', 'address_line2', 'city', 'state',
+            'country', 'postal_code', 'latitude', 'longitude',
+            'is_default',
+        ]
+
+    def validate_postal_code(self, value):
+        if not value.strip():
+            raise serializers.ValidationError('Postal code is required.')
+        return value.strip()

@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.users.models import EmailVerificationToken, PasswordResetToken, User
+from apps.users.models import Address, EmailVerificationToken, PasswordResetToken, User
 from apps.users.services import (
     create_email_verification_token,
     create_password_reset_token,
@@ -344,3 +344,167 @@ class AuthAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user.refresh_from_db()
         self.assertEqual(user.fcm_token, 'test-fcm-token-123')
+
+
+# ──────────────────────────────────────────────
+# Address Model Tests
+# ──────────────────────────────────────────────
+class AddressModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com', username='testuser',
+            password='TestPass123!', first_name='Test', last_name='User',
+        )
+
+    def _make_address(self, **overrides):
+        defaults = {
+            'user': self.user,
+            'full_name': 'Test User',
+            'phone': '+919876543210',
+            'address_line1': '123 Test Street',
+            'city': 'Mumbai',
+            'state': 'Maharashtra',
+            'postal_code': '400001',
+        }
+        defaults.update(overrides)
+        return Address.objects.create(**defaults)
+
+    def test_create_address(self):
+        address = self._make_address()
+        self.assertEqual(address.user, self.user)
+        self.assertEqual(address.address_type, 'HOME')
+        self.assertEqual(address.country, 'India')
+        self.assertTrue(address.is_active)
+        self.assertFalse(address.is_default)
+
+    def test_address_to_snapshot(self):
+        address = self._make_address()
+        snapshot = address.to_snapshot()
+        self.assertEqual(snapshot['full_name'], 'Test User')
+        self.assertEqual(snapshot['phone'], '+919876543210')
+        self.assertEqual(snapshot['city'], 'Mumbai')
+        self.assertEqual(snapshot['postal_code'], '400001')
+        self.assertNotIn('id', snapshot)
+        self.assertNotIn('user', snapshot)
+
+    def test_set_default_unsets_others(self):
+        addr1 = self._make_address(is_default=True)
+        addr2 = self._make_address(is_default=True)
+        addr1.refresh_from_db()
+        self.assertFalse(addr1.is_default)
+        self.assertTrue(addr2.is_default)
+
+    def test_address_ordering(self):
+        addr1 = self._make_address(is_default=False)
+        addr2 = self._make_address(is_default=True)
+        addresses = list(Address.objects.filter(user=self.user))
+        self.assertEqual(addresses[0].id, addr2.id)
+
+    def test_str_representation(self):
+        address = self._make_address()
+        self.assertIsNotNone(str(address))
+
+
+# ──────────────────────────────────────────────
+# Address API Tests
+# ──────────────────────────────────────────────
+class AddressAPITest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email='test@example.com', username='testuser',
+            password='TestPass123!', first_name='Test', last_name='User',
+        )
+        self.client.force_authenticate(user=self.user)
+        self.list_url = '/api/v1/addresses/'
+        self.address_data = {
+            'full_name': 'Test User',
+            'phone': '+919876543210',
+            'address_line1': '123 Test Street',
+            'city': 'Mumbai',
+            'state': 'Maharashtra',
+            'postal_code': '400001',
+        }
+
+    def _create_address(self, **overrides):
+        data = {**self.address_data, **overrides}
+        return Address.objects.create(user=self.user, **data)
+
+    def test_create_address_api(self):
+        response = self.client.post(self.list_url, self.address_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['data']['city'], 'Mumbai')
+
+    def test_list_addresses(self):
+        self._create_address()
+        self._create_address(address_line1='456 Other St')
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['count'], 2)
+
+    def test_list_addresses_excludes_inactive(self):
+        self._create_address()
+        self._create_address(is_active=False)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.data['data']['count'], 1)
+
+    def test_list_addresses_filter_default(self):
+        self._create_address(is_default=True)
+        self._create_address(is_default=False)
+        response = self.client.get(f'{self.list_url}?is_default=true')
+        self.assertEqual(response.data['data']['count'], 1)
+
+    def test_update_address(self):
+        address = self._create_address()
+        url = f'/api/v1/addresses/{address.id}/'
+        response = self.client.patch(url, {'city': 'Pune'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['city'], 'Pune')
+
+    def test_update_nonexistent_address(self):
+        import uuid
+        url = f'/api/v1/addresses/{uuid.uuid4()}/'
+        response = self.client.patch(url, {'city': 'Pune'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_address_soft_deletes(self):
+        address = self._create_address()
+        url = f'/api/v1/addresses/{address.id}/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        address.refresh_from_db()
+        self.assertFalse(address.is_active)
+
+    def test_set_default_address(self):
+        addr1 = self._create_address(is_default=True)
+        addr2 = self._create_address()
+        url = f'/api/v1/addresses/{addr2.id}/set-default/'
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        addr2.refresh_from_db()
+        addr1.refresh_from_db()
+        self.assertTrue(addr2.is_default)
+        self.assertFalse(addr1.is_default)
+
+    def test_create_address_missing_postal_code(self):
+        data = self.address_data.copy()
+        data['postal_code'] = ''
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_address_unauthenticated(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_address_isolation(self):
+        """User cannot see another user's addresses."""
+        self._create_address()
+        other_user = User.objects.create_user(
+            email='other@example.com', username='other',
+            password='TestPass123!', first_name='Other', last_name='User',
+        )
+        self.client.force_authenticate(user=other_user)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.data['data']['count'], 0)
