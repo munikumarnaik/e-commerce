@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.products',
     'apps.cart',
     'apps.orders',
+    'apps.payments',
 ]
 
 MIDDLEWARE = [
@@ -263,3 +264,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ──────────────────────────────────────────────
 EMAIL_VERIFICATION_TOKEN_EXPIRY = 24
 PASSWORD_RESET_TOKEN_EXPIRY = 1
+
+# ──────────────────────────────────────────────
+# Razorpay
+# ──────────────────────────────────────────────
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
