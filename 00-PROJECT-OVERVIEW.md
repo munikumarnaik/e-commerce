@@ -5,7 +5,7 @@
 
 ## 📋 Project Overview
 
-A production-ready dual-category (Food & Clothing) e-commerce mobile application with web admin panel.
+A production-ready dual-category (Food & Clothing) e-commerce mobile application in mobile User authentication and role-based access control
 
 ### **Tech Stack**
 - **Frontend**: Flutter (Mobile App)

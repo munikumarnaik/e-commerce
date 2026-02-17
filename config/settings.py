@@ -157,12 +157,25 @@ SIMPLE_JWT = {
 # ──────────────────────────────────────────────
 # CORS
 # ──────────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:8080',
-    cast=Csv(),
-)
 CORS_ALLOW_CREDENTIALS = True
+
+if DEBUG:
+    # Allow all origins in development (Flutter web uses random ports)
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = config(
+        'CORS_ALLOWED_ORIGINS',
+        default='http://localhost:3000,http://localhost:8080',
+        cast=Csv(),
+    )
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'authorization',
+    'content-type',
+    'origin',
+    'x-requested-with',
+]
 
 # ──────────────────────────────────────────────
 # Redis & Caching
