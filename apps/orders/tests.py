@@ -686,3 +686,322 @@ class CartCouponAPITest(OrderTestMixin, TestCase):
         response = self.client.delete('/api/v1/cart/remove-coupon/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data']['total'], str(get_or_create_cart(self.user).total))
+
+
+# ──────────────────────────────────────────────
+# Admin Order Management Service Tests
+# ──────────────────────────────────────────────
+class AdminOrderServiceTest(OrderTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin = User.objects.create_user(
+            email='admin@test.com',
+            username='admin',
+            password='TestPass123!',
+            first_name='Admin',
+            last_name='User',
+            role='ADMIN',
+        )
+
+    def _create_order(self):
+        self._add_items_to_cart()
+        return create_order(
+            user=self.user,
+            shipping_address_id=self.address.id,
+            payment_method='cod',
+        )
+
+    def test_admin_update_order_status(self):
+        from apps.orders.services import admin_update_order_status
+        order = self._create_order()
+        updated = admin_update_order_status(
+            order_id=order.id,
+            new_status='CONFIRMED',
+            changed_by=self.admin,
+            notes='Admin confirmed.',
+        )
+        self.assertEqual(updated.status, 'CONFIRMED')
+        self.assertEqual(OrderStatusHistory.objects.filter(order=order).count(), 2)
+
+    def test_admin_update_status_with_tracking(self):
+        from apps.orders.services import admin_update_order_status
+        order = self._create_order()
+        admin_update_order_status(order.id, 'CONFIRMED', self.admin)
+        admin_update_order_status(order.id, 'PROCESSING', self.admin)
+        updated = admin_update_order_status(
+            order_id=order.id,
+            new_status='SHIPPED',
+            changed_by=self.admin,
+            tracking_number='TRK123456789',
+            notes='Shipped via FedEx',
+        )
+        self.assertEqual(updated.status, 'SHIPPED')
+        self.assertEqual(updated.tracking_number, 'TRK123456789')
+        self.assertIsNotNone(updated.estimated_delivery)
+
+    def test_admin_update_invalid_transition(self):
+        from apps.orders.services import admin_update_order_status
+        order = self._create_order()
+        with self.assertRaises(ValidationError):
+            admin_update_order_status(order.id, 'DELIVERED', self.admin)
+
+    def test_admin_update_nonexistent_order(self):
+        from apps.orders.services import admin_update_order_status
+        import uuid
+        with self.assertRaises(ValidationError):
+            admin_update_order_status(uuid.uuid4(), 'CONFIRMED', self.admin)
+
+    def test_admin_delivered_sets_delivered_at(self):
+        from apps.orders.services import admin_update_order_status
+        order = self._create_order()
+        admin_update_order_status(order.id, 'CONFIRMED', self.admin)
+        admin_update_order_status(order.id, 'PROCESSING', self.admin)
+        admin_update_order_status(order.id, 'SHIPPED', self.admin)
+        admin_update_order_status(order.id, 'OUT_FOR_DELIVERY', self.admin)
+        updated = admin_update_order_status(order.id, 'DELIVERED', self.admin)
+        self.assertIsNotNone(updated.delivered_at)
+
+    def test_get_admin_dashboard_stats(self):
+        from apps.orders.services import get_admin_dashboard_stats
+        self._create_order()
+        stats = get_admin_dashboard_stats()
+        self.assertIn('overview', stats)
+        self.assertIn('today', stats)
+        self.assertIn('status_breakdown', stats)
+        self.assertIn('top_products', stats)
+        self.assertIn('recent_orders', stats)
+        self.assertEqual(stats['overview']['total_orders'], 1)
+        self.assertEqual(stats['overview']['pending_orders'], 1)
+
+    def test_dashboard_stats_revenue(self):
+        from apps.orders.services import get_admin_dashboard_stats
+        order = self._create_order()
+        order.payment_status = 'PAID'
+        order.save(update_fields=['payment_status'])
+        stats = get_admin_dashboard_stats()
+        self.assertGreater(Decimal(stats['overview']['total_revenue']), Decimal('0'))
+
+
+# ──────────────────────────────────────────────
+# Vendor Order Management Service Tests
+# ──────────────────────────────────────────────
+class VendorOrderServiceTest(OrderTestMixin, TestCase):
+    def _create_order(self):
+        self._add_items_to_cart()
+        return create_order(
+            user=self.user,
+            shipping_address_id=self.address.id,
+            payment_method='cod',
+        )
+
+    def test_get_vendor_orders(self):
+        from apps.orders.services import get_vendor_orders
+        self._create_order()
+        items = get_vendor_orders(self.vendor)
+        self.assertEqual(items.count(), 2)  # product + product2, both from same vendor
+
+    def test_get_vendor_orders_isolation(self):
+        from apps.orders.services import get_vendor_orders
+        other_vendor = User.objects.create_user(
+            email='vendor2@test.com', username='vendor2',
+            password='TestPass123!', first_name='Other', last_name='Vendor',
+            role='VENDOR',
+        )
+        self._create_order()
+        items = get_vendor_orders(other_vendor)
+        self.assertEqual(items.count(), 0)
+
+    def test_get_vendor_dashboard_stats(self):
+        from apps.orders.services import get_vendor_dashboard_stats
+        self._create_order()
+        stats = get_vendor_dashboard_stats(self.vendor)
+        self.assertIn('total_orders', stats)
+        self.assertIn('total_revenue', stats)
+        self.assertIn('pending_orders', stats)
+        self.assertIn('this_month_revenue', stats)
+        self.assertIn('top_products', stats)
+        self.assertEqual(stats['total_orders'], 1)
+
+    def test_vendor_dashboard_revenue_paid(self):
+        from apps.orders.services import get_vendor_dashboard_stats
+        order = self._create_order()
+        order.payment_status = 'PAID'
+        order.save(update_fields=['payment_status'])
+        stats = get_vendor_dashboard_stats(self.vendor)
+        self.assertGreater(Decimal(stats['total_revenue']), Decimal('0'))
+
+
+# ──────────────────────────────────────────────
+# Admin Order API Tests
+# ──────────────────────────────────────────────
+class AdminOrderAPITest(OrderTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin = User.objects.create_user(
+            email='admin@test.com',
+            username='admin',
+            password='TestPass123!',
+            first_name='Admin',
+            last_name='User',
+            role='ADMIN',
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def _create_order(self):
+        self._add_items_to_cart()
+        return create_order(
+            user=self.user,
+            shipping_address_id=self.address.id,
+            payment_method='cod',
+        )
+
+    def test_admin_order_list(self):
+        self._create_order()
+        response = self.client.get('/api/v1/admin/orders/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['data']['count'], 1)
+        self.assertIn('customer', response.data['data']['results'][0])
+
+    def test_admin_order_list_filter_status(self):
+        self._create_order()
+        response = self.client.get('/api/v1/admin/orders/?status=PENDING')
+        self.assertEqual(response.data['data']['count'], 1)
+        response = self.client.get('/api/v1/admin/orders/?status=DELIVERED')
+        self.assertEqual(response.data['data']['count'], 0)
+
+    def test_admin_order_detail(self):
+        order = self._create_order()
+        response = self.client.get(f'/api/v1/admin/orders/{order.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['order_number'], order.order_number)
+
+    def test_admin_order_detail_not_found(self):
+        import uuid
+        response = self.client.get(f'/api/v1/admin/orders/{uuid.uuid4()}/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_admin_update_status(self):
+        order = self._create_order()
+        response = self.client.patch(
+            f'/api/v1/admin/orders/{order.id}/status/',
+            {'status': 'CONFIRMED', 'notes': 'Confirmed by admin'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'CONFIRMED')
+
+    def test_admin_update_status_with_tracking(self):
+        order = self._create_order()
+        # Progress through states
+        order.status = 'PROCESSING'
+        order.save()
+        OrderStatusHistory.objects.create(order=order, status='PROCESSING', changed_by=self.admin)
+
+        response = self.client.patch(
+            f'/api/v1/admin/orders/{order.id}/status/',
+            {
+                'status': 'SHIPPED',
+                'tracking_number': 'TRK999',
+                'notes': 'Shipped via courier',
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['tracking_number'], 'TRK999')
+
+    def test_admin_update_invalid_transition(self):
+        order = self._create_order()
+        response = self.client.patch(
+            f'/api/v1/admin/orders/{order.id}/status/',
+            {'status': 'DELIVERED'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_admin_dashboard_stats(self):
+        self._create_order()
+        response = self.client.get('/api/v1/admin/dashboard/stats/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertIn('overview', response.data['data'])
+        self.assertIn('today', response.data['data'])
+
+    def test_admin_endpoints_forbidden_for_customer(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/api/v1/admin/orders/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_endpoints_forbidden_for_vendor(self):
+        self.client.force_authenticate(user=self.vendor)
+        response = self.client.get('/api/v1/admin/orders/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+# ──────────────────────────────────────────────
+# Vendor Order API Tests
+# ──────────────────────────────────────────────
+class VendorOrderAPITest(OrderTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.client.force_authenticate(user=self.vendor)
+
+    def _create_order(self):
+        self._add_items_to_cart()
+        return create_order(
+            user=self.user,
+            shipping_address_id=self.address.id,
+            payment_method='cod',
+        )
+
+    def test_vendor_order_list(self):
+        self._create_order()
+        response = self.client.get('/api/v1/vendor/orders/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['data']['count'], 2)  # 2 items
+
+    def test_vendor_order_list_filter_status(self):
+        self._create_order()
+        response = self.client.get('/api/v1/vendor/orders/?status=PENDING')
+        self.assertEqual(response.data['data']['count'], 2)
+        response = self.client.get('/api/v1/vendor/orders/?status=DELIVERED')
+        self.assertEqual(response.data['data']['count'], 0)
+
+    def test_vendor_order_item_details(self):
+        self._create_order()
+        response = self.client.get('/api/v1/vendor/orders/')
+        item = response.data['data']['results'][0]
+        self.assertIn('order_number', item)
+        self.assertIn('order_status', item)
+        self.assertIn('customer_name', item)
+        self.assertIn('shipping_address', item)
+        self.assertIn('product_name', item)
+
+    def test_vendor_dashboard(self):
+        self._create_order()
+        response = self.client.get('/api/v1/vendor/dashboard/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertIn('total_orders', response.data['data'])
+        self.assertIn('total_revenue', response.data['data'])
+        self.assertIn('pending_orders', response.data['data'])
+
+    def test_vendor_endpoints_forbidden_for_customer(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/api/v1/vendor/orders/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_vendor_order_isolation(self):
+        """Vendor only sees their own order items."""
+        other_vendor = User.objects.create_user(
+            email='vendor2@test.com', username='vendor2',
+            password='TestPass123!', first_name='Other', last_name='Vendor',
+            role='VENDOR',
+        )
+        self._create_order()
+        self.client.force_authenticate(user=other_vendor)
+        response = self.client.get('/api/v1/vendor/orders/')
+        self.assertEqual(response.data['data']['count'], 0)

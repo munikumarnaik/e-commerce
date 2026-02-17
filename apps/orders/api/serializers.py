@@ -115,3 +115,59 @@ class OrderTrackSerializer(serializers.ModelSerializer):
             'order_number', 'status', 'tracking_number',
             'estimated_delivery', 'timeline',
         ]
+
+
+# ──────────────────────────────────────────────
+# Admin Serializers
+# ──────────────────────────────────────────────
+class AdminOrderListSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()
+    items_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'order_number', 'status', 'payment_status',
+            'total', 'payment_method', 'customer', 'items_count',
+            'tracking_number', 'created_at', 'updated_at',
+        ]
+
+    def get_customer(self, obj):
+        return {
+            'id': str(obj.user.id),
+            'name': obj.user.full_name,
+            'email': obj.user.email,
+        }
+
+    def get_items_count(self, obj):
+        return obj.items.count()
+
+
+class AdminUpdateOrderStatusSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=Order.Status.choices)
+    tracking_number = serializers.CharField(required=False, allow_blank=True, default='')
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+# ──────────────────────────────────────────────
+# Vendor Serializers
+# ──────────────────────────────────────────────
+class VendorOrderItemSerializer(serializers.ModelSerializer):
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+    order_status = serializers.CharField(source='order.status', read_only=True)
+    customer_name = serializers.SerializerMethodField()
+    shipping_address = serializers.JSONField(source='order.shipping_address', read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = [
+            'id', 'order_number', 'order_status',
+            'product_name', 'product_image', 'sku',
+            'variant_size', 'variant_color',
+            'quantity', 'unit_price', 'total_price',
+            'customer_name', 'shipping_address',
+            'created_at',
+        ]
+
+    def get_customer_name(self, obj):
+        return obj.order.user.full_name

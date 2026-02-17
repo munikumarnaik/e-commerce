@@ -1,7 +1,8 @@
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import F
+from django.db.models import Count, F, Q, Sum
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from apps.cart.services import add_to_cart, get_or_create_cart
@@ -267,7 +268,6 @@ def update_order_status(order, new_status, changed_by=None, notes=''):
     update_fields = ['status', 'updated_at']
 
     if new_status == 'DELIVERED':
-        from django.utils import timezone
         order.delivered_at = timezone.now()
         update_fields.append('delivered_at')
 
@@ -281,3 +281,164 @@ def update_order_status(order, new_status, changed_by=None, notes=''):
     )
 
     return order
+
+
+# ──────────────────────────────────────────────
+# Admin Order Management
+# ──────────────────────────────────────────────
+@transaction.atomic
+def admin_update_order_status(order_id, new_status, changed_by, tracking_number='', notes=''):
+    """Admin: update order status, optionally set tracking number."""
+    try:
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        raise ValidationError({'order': 'Order not found.'})
+
+    if not order.can_transition_to(new_status):
+        raise ValidationError(
+            {'status': f'Cannot transition from {order.status} to {new_status}.'},
+        )
+
+    order.status = new_status
+    update_fields = ['status', 'updated_at']
+
+    if tracking_number:
+        order.tracking_number = tracking_number
+        update_fields.append('tracking_number')
+
+    if new_status == 'DELIVERED':
+        order.delivered_at = timezone.now()
+        update_fields.append('delivered_at')
+
+    if new_status == 'SHIPPED' and not order.estimated_delivery:
+        # Set estimated delivery to 5 days from now
+        order.estimated_delivery = timezone.now() + timezone.timedelta(days=5)
+        update_fields.append('estimated_delivery')
+
+    order.save(update_fields=update_fields)
+
+    OrderStatusHistory.objects.create(
+        order=order,
+        status=new_status,
+        notes=notes,
+        changed_by=changed_by,
+    )
+
+    return order
+
+
+def get_admin_dashboard_stats():
+    """Return aggregate stats for admin dashboard."""
+    from apps.users.models import User
+
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    total_orders = Order.objects.count()
+    total_revenue = Order.objects.filter(
+        payment_status=Order.PaymentStatus.PAID,
+    ).aggregate(total=Sum('total'))['total'] or Decimal('0.00')
+
+    pending_orders = Order.objects.filter(status=Order.Status.PENDING).count()
+    total_users = User.objects.filter(role=User.Role.CUSTOMER).count()
+    total_vendors = User.objects.filter(role=User.Role.VENDOR).count()
+
+    # Today's stats
+    today_orders = Order.objects.filter(created_at__gte=today_start).count()
+    today_revenue = Order.objects.filter(
+        created_at__gte=today_start,
+        payment_status=Order.PaymentStatus.PAID,
+    ).aggregate(total=Sum('total'))['total'] or Decimal('0.00')
+    new_users_today = User.objects.filter(created_at__gte=today_start).count()
+
+    # Order status breakdown
+    status_breakdown = dict(
+        Order.objects.values_list('status').annotate(count=Count('id')).values_list('status', 'count')
+    )
+
+    # Top products by order count (last 30 days)
+    thirty_days_ago = now - timezone.timedelta(days=30)
+    top_products = list(
+        OrderItem.objects.filter(order__created_at__gte=thirty_days_ago)
+        .values('product_name', 'product_image')
+        .annotate(total_sold=Sum('quantity'), revenue=Sum('total_price'))
+        .order_by('-total_sold')[:5]
+    )
+
+    # Recent orders
+    recent_orders = list(
+        Order.objects.select_related('user').order_by('-created_at')[:10]
+        .values('order_number', 'status', 'total', 'created_at', 'user__first_name', 'user__last_name')
+    )
+
+    return {
+        'overview': {
+            'total_users': total_users,
+            'total_vendors': total_vendors,
+            'total_orders': total_orders,
+            'total_revenue': str(total_revenue),
+            'pending_orders': pending_orders,
+        },
+        'today': {
+            'orders': today_orders,
+            'revenue': str(today_revenue),
+            'new_users': new_users_today,
+        },
+        'status_breakdown': status_breakdown,
+        'top_products': top_products,
+        'recent_orders': recent_orders,
+    }
+
+
+# ──────────────────────────────────────────────
+# Vendor Order Management
+# ──────────────────────────────────────────────
+def get_vendor_orders(vendor):
+    """Get all order items assigned to a vendor, grouped by order."""
+    return OrderItem.objects.filter(vendor=vendor).select_related(
+        'order', 'order__user',
+    ).order_by('-order__created_at')
+
+
+def get_vendor_dashboard_stats(vendor):
+    """Return aggregate stats for vendor dashboard."""
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    vendor_items = OrderItem.objects.filter(vendor=vendor)
+
+    total_items = vendor_items.count()
+    total_revenue = vendor_items.filter(
+        order__payment_status=Order.PaymentStatus.PAID,
+    ).aggregate(total=Sum('total_price'))['total'] or Decimal('0.00')
+
+    pending_items = vendor_items.filter(
+        order__status__in=[Order.Status.PENDING, Order.Status.CONFIRMED],
+    ).count()
+
+    this_month_revenue = vendor_items.filter(
+        order__created_at__gte=month_start,
+        order__payment_status=Order.PaymentStatus.PAID,
+    ).aggregate(total=Sum('total_price'))['total'] or Decimal('0.00')
+
+    # Unique orders
+    total_orders = vendor_items.values('order').distinct().count()
+    pending_orders = vendor_items.filter(
+        order__status__in=[Order.Status.PENDING, Order.Status.CONFIRMED],
+    ).values('order').distinct().count()
+
+    # Top products
+    top_products = list(
+        vendor_items.values('product_name', 'product_image')
+        .annotate(total_sold=Sum('quantity'), revenue=Sum('total_price'))
+        .order_by('-total_sold')[:5]
+    )
+
+    return {
+        'total_products': total_items,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'total_revenue': str(total_revenue),
+        'this_month_revenue': str(this_month_revenue),
+        'top_products': top_products,
+    }
