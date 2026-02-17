@@ -38,5 +38,5 @@ htmlcov/
 .coverage.*
 coverage.xml
 
-# Postman Collection
-.api-collections
+# API Collections
+api-collections/
