@@ -7,6 +7,15 @@ import 'product_variant_model.dart';
 part 'product_model.freezed.dart';
 part 'product_model.g.dart';
 
+/// Parses a value that may be a String or num into a double.
+/// Handles backend returning "0.00" (String) instead of 0.0 (num).
+double parseDoubleField(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
+}
+
 @freezed
 class ProductCategory with _$ProductCategory {
   const factory ProductCategory({
@@ -50,7 +59,7 @@ class Product with _$Product {
     @JsonKey(name: 'track_inventory') @Default(true) bool trackInventory,
     String? thumbnail,
     @Default([]) List<ProductImage> images,
-    @JsonKey(name: 'average_rating') @Default(0.0) double averageRating,
+    @JsonKey(name: 'average_rating', fromJson: parseDoubleField) @Default(0.0) double averageRating,
     @JsonKey(name: 'total_reviews') @Default(0) int totalReviews,
     @JsonKey(name: 'is_featured') @Default(false) bool isFeatured,
     @JsonKey(name: 'is_available') @Default(true) bool isAvailable,

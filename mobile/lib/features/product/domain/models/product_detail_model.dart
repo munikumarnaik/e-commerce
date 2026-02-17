@@ -39,7 +39,7 @@ class ProductDetail with _$ProductDetail {
     @JsonKey(name: 'track_inventory') @Default(true) bool trackInventory,
     String? thumbnail,
     @Default([]) List<ProductImage> images,
-    @JsonKey(name: 'average_rating') @Default(0.0) double averageRating,
+    @JsonKey(name: 'average_rating', fromJson: parseDoubleField) @Default(0.0) double averageRating,
     @JsonKey(name: 'total_reviews') @Default(0) int totalReviews,
     @JsonKey(name: 'is_featured') @Default(false) bool isFeatured,
     @JsonKey(name: 'is_available') @Default(true) bool isAvailable,

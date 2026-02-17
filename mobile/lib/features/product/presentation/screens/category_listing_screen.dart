@@ -9,53 +9,63 @@ import '../providers/product_list_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../widgets/product_card_skeleton.dart';
 
-/// Dedicated provider for category-scoped product listing
-final categoryProductListProvider =
-    StateNotifierProvider.family<ProductListNotifier, ProductListState, String>(
-  (ref, categorySlug) {
-    final repository = ref.watch(productRepositoryProvider);
-    final notifier = ProductListNotifier(repository);
-    notifier.loadProducts(
-      filter: ProductFilter(categoryId: categorySlug),
-    );
-    return notifier;
-  },
-);
+/// A generic filtered product listing screen.
+/// Pass a [ProductFilter] via the `extra` field in GoRouter.
+/// Falls back to filtering by brand or food_type query params.
+class FilteredProductListingScreen extends ConsumerStatefulWidget {
+  final String title;
+  final ProductFilter filter;
 
-class CategoryListingScreen extends ConsumerWidget {
-  final String categorySlug;
-  final String? categoryName;
-
-  const CategoryListingScreen({
+  const FilteredProductListingScreen({
     super.key,
-    required this.categorySlug,
-    this.categoryName,
+    required this.title,
+    required this.filter,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(categoryProductListProvider(categorySlug));
+  ConsumerState<FilteredProductListingScreen> createState() =>
+      _FilteredProductListingScreenState();
+}
+
+class _FilteredProductListingScreenState
+    extends ConsumerState<FilteredProductListingScreen> {
+  late final StateNotifierProvider<ProductListNotifier, ProductListState>
+      _provider;
+
+  @override
+  void initState() {
+    super.initState();
+    // Create a unique provider keyed on the filter's string representation
+    _provider = StateNotifierProvider<ProductListNotifier, ProductListState>(
+      (ref) {
+        final repository = ref.watch(productRepositoryProvider);
+        final notifier = ProductListNotifier(repository);
+        notifier.loadProducts(filter: widget.filter);
+        return notifier;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(_provider);
     final wishlist = ref.watch(wishlistProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(categoryName ?? 'Category'),
+        title: Text(widget.title),
       ),
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollEndNotification &&
               notification.metrics.extentAfter < 300) {
-            ref
-                .read(categoryProductListProvider(categorySlug).notifier)
-                .loadMore();
+            ref.read(_provider.notifier).loadMore();
           }
           return false;
         },
         child: RefreshIndicator(
-          onRefresh: () => ref
-              .read(categoryProductListProvider(categorySlug).notifier)
-              .refresh(),
+          onRefresh: () => ref.read(_provider.notifier).refresh(),
           child: _buildBody(context, ref, state, wishlist, theme),
         ),
       ),
@@ -93,10 +103,7 @@ class CategoryListingScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppDimensions.lg),
                 FilledButton.tonal(
-                  onPressed: () => ref
-                      .read(
-                          categoryProductListProvider(categorySlug).notifier)
-                      .refresh(),
+                  onPressed: () => ref.read(_provider.notifier).refresh(),
                   child: const Text('Retry'),
                 ),
               ],
@@ -118,7 +125,7 @@ class CategoryListingScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppDimensions.md),
                 Text(
-                  'No products in this category',
+                  'No products found',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -171,3 +178,6 @@ class CategoryListingScreen extends ConsumerWidget {
     }
   }
 }
+
+/// Keep the old class name as an alias for backward compatibility with router
+typedef CategoryListingScreen = FilteredProductListingScreen;

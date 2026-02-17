@@ -100,6 +100,52 @@ class AppStrings {
   static const careInstructions = 'Care Instructions';
   static const fitType = 'Fit';
 
+  // Admin
+  static const adminDashboard = 'Admin Dashboard';
+  static const addProduct = 'Add Product';
+  static const createProduct = 'Create Product';
+  static const productCreated = 'Product created successfully!';
+  static const creatingProduct = 'Creating product...';
+  static const uploadingImages = 'Uploading images...';
+  static const basicInfo = 'Basic Info';
+  static const pricing = 'Pricing';
+  static const images = 'Images';
+  static const typeDetails = 'Type Details';
+  static const productName = 'Product Name';
+  static const productDescription = 'Product Description';
+  static const brand = 'Brand';
+  static const category = 'Category';
+  static const productType = 'Product Type';
+  static const price = 'Price';
+  static const compareAtPrice = 'Compare at Price';
+  static const stockQuantity = 'Stock Quantity';
+  static const sku = 'SKU';
+  static const selectCategory = 'Select Category';
+  static const selectBrand = 'Select Brand';
+  static const addImages = 'Add Images';
+  static const tapToAddImages = 'Tap to add product images';
+  static const next = 'Next';
+  static const back = 'Back';
+  static const submit = 'Submit';
+  static const step = 'Step';
+  static const fieldRequired = 'This field is required';
+  static const invalidPrice = 'Enter a valid price';
+  static const invalidQuantity = 'Enter a valid quantity';
+  static const atLeastOneImage = 'Add at least one image';
+  static const foodType = 'Food Type';
+  static const cuisineType = 'Cuisine Type';
+  static const spiceLevel = 'Spice Level';
+  static const calories = 'Calories';
+  static const protein = 'Protein (g)';
+  static const carbs = 'Carbs (g)';
+  static const fat = 'Fat (g)';
+  static const preparationTime = 'Preparation Time (min)';
+  static const clothingGender = 'Gender';
+  static const clothingMaterial = 'Material';
+  static const fabric = 'Fabric';
+  static const pattern = 'Pattern';
+  static const season = 'Season';
+
   // General
   static const cancel = 'Cancel';
   static const save = 'Save';

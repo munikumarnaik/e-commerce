@@ -33,7 +33,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final state = ref.read(authProvider);
     if (state is AuthAuthenticated) {
-      context.go(RouteNames.home);
+      final role = state.user.role;
+      if (role == 'ADMIN' || role == 'VENDOR') {
+        context.go(RouteNames.admin);
+      } else {
+        context.go(RouteNames.home);
+      }
     } else {
       context.go(RouteNames.login);
     }

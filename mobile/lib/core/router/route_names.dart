@@ -37,6 +37,10 @@ class RouteNames {
   static const paymentSuccess = '/payment/success/:orderId';
   static const paymentFailure = '/payment/failure';
 
+  // Admin
+  static const admin = '/admin';
+  static const adminCreateProduct = '/admin/create-product';
+
   // Others
   static const wishlist = '/wishlist';
   static const notifications = '/notifications';

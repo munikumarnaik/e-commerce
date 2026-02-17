@@ -261,6 +261,11 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     clothing_details = ClothingProductSerializer(required=False)
     variants = ProductVariantCreateSerializer(many=True, required=False)
 
+    # Accept brand as a plain name string; resolved to a Brand instance in validate()
+    brand = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True,
+    )
+
     class Meta:
         model = Product
         fields = [
@@ -274,7 +279,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'is_active', 'is_featured', 'is_available',
             'food_details', 'clothing_details', 'variants',
         ]
-        extra_kwargs = {'slug': {'required': False}}
+        extra_kwargs = {
+            'slug': {'required': False},
+            'thumbnail': {'required': False, 'allow_null': True, 'allow_blank': True},
+        }
 
     def validate(self, attrs):
         product_type = attrs.get('product_type')
@@ -289,6 +297,18 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'clothing_details': 'Clothing details are required for clothing products.'},
             )
+
+        # Admin types a brand name → resolve to Brand instance (create if new)
+        brand_name = attrs.get('brand')
+        if brand_name and brand_name.strip():
+            name = brand_name.strip()
+            try:
+                brand_obj = Brand.objects.get(name__iexact=name)
+            except Brand.DoesNotExist:
+                brand_obj = Brand.objects.create(name=name, is_active=True)
+            attrs['brand'] = brand_obj
+        else:
+            attrs['brand'] = None
 
         return attrs
 

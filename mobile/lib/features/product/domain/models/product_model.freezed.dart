@@ -412,7 +412,7 @@ mixin _$Product {
   bool get trackInventory => throw _privateConstructorUsedError;
   String? get thumbnail => throw _privateConstructorUsedError;
   List<ProductImage> get images => throw _privateConstructorUsedError;
-  @JsonKey(name: 'average_rating')
+  @JsonKey(name: 'average_rating', fromJson: parseDoubleField)
   double get averageRating => throw _privateConstructorUsedError;
   @JsonKey(name: 'total_reviews')
   int get totalReviews => throw _privateConstructorUsedError;
@@ -463,7 +463,8 @@ abstract class $ProductCopyWith<$Res> {
       @JsonKey(name: 'track_inventory') bool trackInventory,
       String? thumbnail,
       List<ProductImage> images,
-      @JsonKey(name: 'average_rating') double averageRating,
+      @JsonKey(name: 'average_rating', fromJson: parseDoubleField)
+      double averageRating,
       @JsonKey(name: 'total_reviews') int totalReviews,
       @JsonKey(name: 'is_featured') bool isFeatured,
       @JsonKey(name: 'is_available') bool isAvailable,
@@ -705,7 +706,8 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
       @JsonKey(name: 'track_inventory') bool trackInventory,
       String? thumbnail,
       List<ProductImage> images,
-      @JsonKey(name: 'average_rating') double averageRating,
+      @JsonKey(name: 'average_rating', fromJson: parseDoubleField)
+      double averageRating,
       @JsonKey(name: 'total_reviews') int totalReviews,
       @JsonKey(name: 'is_featured') bool isFeatured,
       @JsonKey(name: 'is_available') bool isAvailable,
@@ -889,7 +891,8 @@ class _$ProductImpl implements _Product {
       @JsonKey(name: 'track_inventory') this.trackInventory = true,
       this.thumbnail,
       final List<ProductImage> images = const [],
-      @JsonKey(name: 'average_rating') this.averageRating = 0.0,
+      @JsonKey(name: 'average_rating', fromJson: parseDoubleField)
+      this.averageRating = 0.0,
       @JsonKey(name: 'total_reviews') this.totalReviews = 0,
       @JsonKey(name: 'is_featured') this.isFeatured = false,
       @JsonKey(name: 'is_available') this.isAvailable = true,
@@ -951,7 +954,7 @@ class _$ProductImpl implements _Product {
   }
 
   @override
-  @JsonKey(name: 'average_rating')
+  @JsonKey(name: 'average_rating', fromJson: parseDoubleField)
   final double averageRating;
   @override
   @JsonKey(name: 'total_reviews')
@@ -1104,7 +1107,8 @@ abstract class _Product implements Product {
       @JsonKey(name: 'track_inventory') final bool trackInventory,
       final String? thumbnail,
       final List<ProductImage> images,
-      @JsonKey(name: 'average_rating') final double averageRating,
+      @JsonKey(name: 'average_rating', fromJson: parseDoubleField)
+      final double averageRating,
       @JsonKey(name: 'total_reviews') final int totalReviews,
       @JsonKey(name: 'is_featured') final bool isFeatured,
       @JsonKey(name: 'is_available') final bool isAvailable,
@@ -1156,7 +1160,7 @@ abstract class _Product implements Product {
   @override
   List<ProductImage> get images;
   @override
-  @JsonKey(name: 'average_rating')
+  @JsonKey(name: 'average_rating', fromJson: parseDoubleField)
   double get averageRating;
   @override
   @JsonKey(name: 'total_reviews')

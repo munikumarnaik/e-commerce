@@ -61,7 +61,9 @@ _$ProductImpl _$$ProductImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => ProductImage.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0.0,
+      averageRating: json['average_rating'] == null
+          ? 0.0
+          : parseDoubleField(json['average_rating']),
       totalReviews: (json['total_reviews'] as num?)?.toInt() ?? 0,
       isFeatured: json['is_featured'] as bool? ?? false,
       isAvailable: json['is_available'] as bool? ?? true,

@@ -48,7 +48,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen<AuthState>(authProvider, (_, next) {
       if (next is AuthAuthenticated) {
-        context.go(RouteNames.home);
+        final role = next.user.role;
+        if (role == 'ADMIN' || role == 'VENDOR') {
+          context.go(RouteNames.admin);
+        } else {
+          context.go(RouteNames.home);
+        }
       } else if (next is AuthError) {
         context.showSnackBar(next.message, isError: true);
       }

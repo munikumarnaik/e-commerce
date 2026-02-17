@@ -108,13 +108,16 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Category chips
+                // Brands (clothing) / Food types (food)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: AppDimensions.lg),
                     child: CategoryChipsRow(
-                      onCategoryTap: (cat) {
-                        context.push('/categories/${cat.slug}');
+                      onItemTap: (title, filter) {
+                        context.push(
+                          '/filtered-products',
+                          extra: {'title': title, 'filter': filter},
+                        );
                       },
                     ),
                   ),
