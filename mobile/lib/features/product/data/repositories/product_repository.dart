@@ -32,7 +32,9 @@ class ProductRepository {
   Future<ProductDetail> getProductDetail(String slug) async {
     try {
       final response = await _dio.get(ApiEndpoints.productDetail(slug));
-      return ProductDetail.fromJson(response.data['data']);
+      // RetrieveAPIView returns the object directly (no {"data":...} wrapper)
+      final data = response.data['data'] ?? response.data;
+      return ProductDetail.fromJson(data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw _handleError(e);
     }

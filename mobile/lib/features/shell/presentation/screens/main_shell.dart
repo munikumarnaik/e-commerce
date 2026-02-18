@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../cart/presentation/providers/cart_provider.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const MainShell({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final cartCount = ref.watch(cartItemCountProvider);
 
     return Scaffold(
       body: navigationShell,
@@ -22,23 +25,37 @@ class MainShell extends StatelessWidget {
         },
         backgroundColor: theme.colorScheme.surface,
         indicatorColor: theme.colorScheme.primaryContainer,
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          const NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.search_rounded),
             selectedIcon: Icon(Icons.search_rounded),
             label: 'Search',
           ),
           NavigationDestination(
-            icon: Icon(Icons.shopping_cart_outlined),
-            selectedIcon: Icon(Icons.shopping_cart_rounded),
+            icon: Badge(
+              isLabelVisible: cartCount > 0,
+              label: Text(
+                cartCount > 99 ? '99+' : '$cartCount',
+                style: const TextStyle(fontSize: 10),
+              ),
+              child: const Icon(Icons.shopping_cart_outlined),
+            ),
+            selectedIcon: Badge(
+              isLabelVisible: cartCount > 0,
+              label: Text(
+                cartCount > 99 ? '99+' : '$cartCount',
+                style: const TextStyle(fontSize: 10),
+              ),
+              child: const Icon(Icons.shopping_cart_rounded),
+            ),
             label: 'Cart',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
             selectedIcon: Icon(Icons.person_rounded),
             label: 'Profile',

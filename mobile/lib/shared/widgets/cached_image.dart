@@ -31,12 +31,38 @@ class CachedImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        httpHeaders: const {
+          'Accept': '*/*',
+        },
         placeholder: (context, url) => ShimmerWidget(
           width: width ?? double.infinity,
           height: height ?? 200,
           borderRadius: borderRadius,
         ),
-        errorWidget: (context, url, error) => _placeholder(context),
+        errorWidget: (context, url, error) => _errorWidget(context, url),
+      ),
+    );
+  }
+
+  Widget _errorWidget(BuildContext context, String url) {
+    // Fallback: try loading with Image.network which handles R2/S3 URLs better
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: Image.network(
+        url,
+        width: width,
+        height: height,
+        fit: fit,
+        headers: const {'Accept': '*/*'},
+        errorBuilder: (context, error, stackTrace) => _placeholder(context),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return ShimmerWidget(
+            width: width ?? double.infinity,
+            height: height ?? 200,
+            borderRadius: borderRadius,
+          );
+        },
       ),
     );
   }

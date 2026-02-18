@@ -8,7 +8,8 @@ import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/cart/presentation/screens/cart_placeholder_screen.dart';
+import '../../features/cart/presentation/screens/cart_screen.dart';
+import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/product/domain/models/product_filter.dart';
 import '../../features/product/presentation/screens/category_listing_screen.dart';
@@ -111,7 +112,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: RouteNames.cart,
-                builder: (context, state) => const CartPlaceholderScreen(),
+                builder: (context, state) => const CartScreen(),
               ),
             ],
           ),
@@ -149,6 +150,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           final slug = state.pathParameters['slug']!;
           return ProductDetailScreen(slug: slug);
         },
+      ),
+
+      // Wishlist (full-screen, outside shell)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.wishlist,
+        builder: (context, state) => const WishlistScreen(),
       ),
 
       // Filtered product listing (full-screen, outside shell)
