@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/constants/app_dimensions.dart';
 
 class AdminFormField extends StatelessWidget {
@@ -8,6 +9,7 @@ class AdminFormField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final String? Function(String?)? validator;
   final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
   final bool required;
 
@@ -19,6 +21,7 @@ class AdminFormField extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.keyboardType = TextInputType.text,
+    this.inputFormatters,
     this.maxLines = 1,
     this.required = false,
   });
@@ -32,6 +35,7 @@ class AdminFormField extends StatelessWidget {
         onChanged: onChanged,
         validator: validator,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         maxLines: maxLines,
         decoration: InputDecoration(
           labelText: required ? '$label *' : label,

@@ -53,4 +53,18 @@ class AdminProductRepository {
     );
     return _extractData(response.data);
   }
+
+  Future<Map<String, dynamic>> createCategory({
+    required String name,
+    required String categoryType,
+  }) async {
+    final response = await _dio.post(
+      ApiEndpoints.categoryCreate,
+      data: {
+        'name': name,
+        'category_type': categoryType,
+      },
+    );
+    return _extractData(response.data);
+  }
 }

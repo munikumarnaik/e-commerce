@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../product/presentation/providers/category_provider.dart';
+import '../../data/repositories/admin_product_repository.dart';
 import '../providers/create_product_provider.dart';
 import 'admin_form_field.dart';
 
@@ -15,6 +17,7 @@ class StepBasicInfo extends ConsumerWidget {
     final formState = ref.watch(createProductProvider);
     final notifier = ref.read(createProductProvider.notifier);
     final theme = Theme.of(context);
+    final isFood = formState.productType == 'FOOD';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppDimensions.md),
@@ -77,25 +80,93 @@ class StepBasicInfo extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.md),
 
-          // Category Dropdown
-          _CategoryDropdown(
+          // Category dropdown + "Add Category" button
+          _CategorySection(
             selectedId: formState.categoryId,
             productType: formState.productType,
             onChanged: notifier.updateCategory,
           ),
 
-          // Brand (optional)
-          AdminFormField(
-            label: AppStrings.brand,
-            initialValue: formState.brand,
-            onChanged: notifier.updateBrand,
-          ),
+          // Brand — only shown for CLOTHING
+          if (!isFood)
+            AdminFormField(
+              label: AppStrings.brand,
+              hint: 'Brand name (optional)',
+              initialValue: formState.brand,
+              onChanged: notifier.updateBrand,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s\-&.]')),
+              ],
+            ),
         ],
       ),
     );
   }
 }
 
+// ──────────────────────────────────────────────
+// Category section: dropdown + "Add Category" button
+// ──────────────────────────────────────────────
+class _CategorySection extends ConsumerWidget {
+  final String? selectedId;
+  final String productType;
+  final ValueChanged<String?> onChanged;
+
+  const _CategorySection({
+    required this.selectedId,
+    required this.productType,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _CategoryDropdown(
+            selectedId: selectedId,
+            productType: productType,
+            onChanged: onChanged,
+          ),
+        ),
+        const SizedBox(width: AppDimensions.sm),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: AppDimensions.md),
+          child: Tooltip(
+            message: 'Add new category',
+            child: FilledButton.tonal(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(48, 52),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+              ),
+              onPressed: () async {
+                final created = await showDialog<bool>(
+                  context: context,
+                  builder: (_) =>
+                      _AddCategoryDialog(productType: productType),
+                );
+                if (created == true) {
+                  // Refresh category dropdown with newly created category
+                  ref.invalidate(categoriesProvider(productType));
+                }
+              },
+              child: const Icon(Icons.add_rounded),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Category dropdown
+// ──────────────────────────────────────────────
 class _CategoryDropdown extends ConsumerWidget {
   final String? selectedId;
   final String productType;
@@ -139,6 +210,115 @@ class _CategoryDropdown extends ConsumerWidget {
           style: TextStyle(color: Theme.of(context).colorScheme.error),
         ),
       ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Add Category dialog
+// ──────────────────────────────────────────────
+class _AddCategoryDialog extends ConsumerStatefulWidget {
+  final String productType;
+
+  const _AddCategoryDialog({required this.productType});
+
+  @override
+  ConsumerState<_AddCategoryDialog> createState() => _AddCategoryDialogState();
+}
+
+class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  bool _isLoading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final repository = ref.read(adminProductRepositoryProvider);
+      await repository.createCategory(
+        name: _nameController.text.trim(),
+        categoryType: widget.productType,
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (_) {
+      setState(() {
+        _isLoading = false;
+        _error = 'Failed to create category. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final label = widget.productType == 'FOOD' ? 'Food' : 'Clothing';
+
+    return AlertDialog(
+      title: Text('Add $label Category'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _nameController,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              // Only letters and spaces
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'Category Name *',
+                hintText: 'e.g. Snacks, Tops, Footwear',
+              ),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Name is required' : null,
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: AppDimensions.sm),
+              Text(
+                _error!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed:
+              _isLoading ? null : () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isLoading ? null : _submit,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Create'),
+        ),
+      ],
     );
   }
 }

@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../providers/create_product_provider.dart';
 import 'admin_form_field.dart';
+
+// Shared formatters
+final _decimalFormatter =
+    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'));
+final _integerFormatter = FilteringTextInputFormatter.digitsOnly;
+final _lettersOnlyFormatter =
+    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'));
+final _lettersAndBasicFormatter =
+    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s,/\-]'));
 
 class StepTypeDetails extends ConsumerWidget {
   const StepTypeDetails({super.key});
@@ -55,12 +65,13 @@ class _FoodDetailsForm extends ConsumerWidget {
             onChanged: notifier.updateFoodType,
           ),
 
-          // Cuisine Type
+          // Cuisine Type — letters and spaces only
           AdminFormField(
             label: AppStrings.cuisineType,
             hint: 'e.g. Indian, Italian, Chinese',
             initialValue: formState.cuisineType,
             onChanged: notifier.updateCuisineType,
+            inputFormatters: [_lettersOnlyFormatter],
           ),
 
           // Spice Level
@@ -94,19 +105,23 @@ class _FoodDetailsForm extends ConsumerWidget {
               Expanded(
                 child: AdminFormField(
                   label: AppStrings.calories,
+                  hint: 'e.g. 250',
                   initialValue: formState.calories,
                   onChanged: notifier.updateCalories,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [_integerFormatter],
                 ),
               ),
               const SizedBox(width: AppDimensions.sm),
               Expanded(
                 child: AdminFormField(
                   label: AppStrings.protein,
+                  hint: 'e.g. 12.5',
                   initialValue: formState.protein,
                   onChanged: notifier.updateProtein,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [_decimalFormatter],
                 ),
               ),
             ],
@@ -117,37 +132,46 @@ class _FoodDetailsForm extends ConsumerWidget {
               Expanded(
                 child: AdminFormField(
                   label: AppStrings.carbs,
+                  hint: 'e.g. 30.0',
                   initialValue: formState.carbs,
                   onChanged: notifier.updateCarbs,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [_decimalFormatter],
                 ),
               ),
               const SizedBox(width: AppDimensions.sm),
               Expanded(
                 child: AdminFormField(
                   label: AppStrings.fat,
+                  hint: 'e.g. 8.0',
                   initialValue: formState.fat,
                   onChanged: notifier.updateFat,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [_decimalFormatter],
                 ),
               ),
             ],
           ),
 
+          // Serving size — letters, numbers, g/ml/plate allowed
           AdminFormField(
             label: AppStrings.servingSize,
             hint: 'e.g. 250g, 1 plate',
             initialValue: formState.servingSize,
             onChanged: notifier.updateServingSize,
+            inputFormatters: [_lettersAndBasicFormatter],
           ),
 
+          // Preparation time — integers only (minutes)
           AdminFormField(
             label: AppStrings.preparationTime,
+            hint: 'Minutes (e.g. 30)',
             initialValue: formState.preparationTime,
             onChanged: notifier.updatePreparationTime,
             keyboardType: TextInputType.number,
+            inputFormatters: [_integerFormatter],
           ),
 
           // Allergens
@@ -228,7 +252,8 @@ class _ClothingDetailsForm extends ConsumerWidget {
               DropdownMenuItem(value: 'TOPWEAR', child: Text('Topwear')),
               DropdownMenuItem(value: 'BOTTOMWEAR', child: Text('Bottomwear')),
               DropdownMenuItem(value: 'FOOTWEAR', child: Text('Footwear')),
-              DropdownMenuItem(value: 'ACCESSORIES', child: Text('Accessories')),
+              DropdownMenuItem(
+                  value: 'ACCESSORIES', child: Text('Accessories')),
               DropdownMenuItem(value: 'INNERWEAR', child: Text('Innerwear')),
               DropdownMenuItem(value: 'ETHNIC', child: Text('Ethnic')),
               DropdownMenuItem(value: 'SPORTSWEAR', child: Text('Sportswear')),
@@ -236,32 +261,35 @@ class _ClothingDetailsForm extends ConsumerWidget {
             onChanged: notifier.updateClothingType,
           ),
 
-          // Material
+          // Material — letters and spaces only
           AdminFormField(
             label: AppStrings.clothingMaterial,
             hint: 'e.g. Cotton, Polyester, Silk',
             initialValue: formState.material,
             onChanged: notifier.updateMaterial,
             required: true,
+            inputFormatters: [_lettersOnlyFormatter],
             validator: (v) =>
                 v == null || v.isEmpty ? AppStrings.fieldRequired : null,
           ),
 
-          // Fabric
+          // Fabric — letters and spaces only
           AdminFormField(
             label: AppStrings.fabric,
             hint: 'e.g. Denim, Chiffon, Knit',
             initialValue: formState.fabric,
             onChanged: notifier.updateFabric,
+            inputFormatters: [_lettersOnlyFormatter],
           ),
 
-          // Care Instructions
+          // Care Instructions — letters, spaces, commas allowed
           AdminFormField(
             label: AppStrings.careInstructions,
             hint: 'e.g. Machine wash cold',
             initialValue: formState.careInstructions,
             onChanged: notifier.updateCareInstructions,
             maxLines: 2,
+            inputFormatters: [_lettersAndBasicFormatter],
           ),
 
           // Fit Type
@@ -277,12 +305,13 @@ class _ClothingDetailsForm extends ConsumerWidget {
             onChanged: notifier.updateFitType,
           ),
 
-          // Pattern
+          // Pattern — letters only
           AdminFormField(
             label: AppStrings.pattern,
             hint: 'e.g. Solid, Striped, Printed',
             initialValue: formState.pattern,
             onChanged: notifier.updatePattern,
+            inputFormatters: [_lettersOnlyFormatter],
           ),
 
           // Season
@@ -293,7 +322,8 @@ class _ClothingDetailsForm extends ConsumerWidget {
               DropdownMenuItem(value: 'SUMMER', child: Text('Summer')),
               DropdownMenuItem(value: 'WINTER', child: Text('Winter')),
               DropdownMenuItem(value: 'MONSOON', child: Text('Monsoon')),
-              DropdownMenuItem(value: 'ALL_SEASON', child: Text('All Season')),
+              DropdownMenuItem(
+                  value: 'ALL_SEASON', child: Text('All Season')),
             ],
             onChanged: notifier.updateSeason,
           ),

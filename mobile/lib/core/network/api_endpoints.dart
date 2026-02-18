@@ -58,6 +58,7 @@ class ApiEndpoints {
 
   // Admin Product Management
   static const createProduct = '/products/create/';
+  static const categoryCreate = '/categories/create/';
   static String uploadProductImage(String slug) => '/products/$slug/images/upload/';
   static String updateProduct(String slug) => '/products/$slug/update/';
 
