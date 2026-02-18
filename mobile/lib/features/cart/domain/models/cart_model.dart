@@ -18,7 +18,7 @@ class Cart with _$Cart {
     @JsonKey(name: 'total') @Default('0.00') String total,
     @JsonKey(name: 'coupon_code') String? couponCode,
     @JsonKey(name: 'coupon_discount') @Default('0.00') String couponDiscount,
-    @JsonKey(name: 'item_count') @Default(0) int itemCount,
+    @JsonKey(name: 'items_count') @Default(0) int itemCount,
   }) = _Cart;
 
   factory Cart.fromJson(Map<String, dynamic> json) => _$CartFromJson(json);

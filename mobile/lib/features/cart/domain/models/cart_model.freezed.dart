@@ -36,7 +36,7 @@ mixin _$Cart {
   String? get couponCode => throw _privateConstructorUsedError;
   @JsonKey(name: 'coupon_discount')
   String get couponDiscount => throw _privateConstructorUsedError;
-  @JsonKey(name: 'item_count')
+  @JsonKey(name: 'items_count')
   int get itemCount => throw _privateConstructorUsedError;
 
   /// Serializes this Cart to a JSON map.
@@ -63,7 +63,7 @@ abstract class $CartCopyWith<$Res> {
       @JsonKey(name: 'total') String total,
       @JsonKey(name: 'coupon_code') String? couponCode,
       @JsonKey(name: 'coupon_discount') String couponDiscount,
-      @JsonKey(name: 'item_count') int itemCount});
+      @JsonKey(name: 'items_count') int itemCount});
 }
 
 /// @nodoc
@@ -154,7 +154,7 @@ abstract class _$$CartImplCopyWith<$Res> implements $CartCopyWith<$Res> {
       @JsonKey(name: 'total') String total,
       @JsonKey(name: 'coupon_code') String? couponCode,
       @JsonKey(name: 'coupon_discount') String couponDiscount,
-      @JsonKey(name: 'item_count') int itemCount});
+      @JsonKey(name: 'items_count') int itemCount});
 }
 
 /// @nodoc
@@ -238,7 +238,7 @@ class _$CartImpl extends _Cart {
       @JsonKey(name: 'total') this.total = '0.00',
       @JsonKey(name: 'coupon_code') this.couponCode,
       @JsonKey(name: 'coupon_discount') this.couponDiscount = '0.00',
-      @JsonKey(name: 'item_count') this.itemCount = 0})
+      @JsonKey(name: 'items_count') this.itemCount = 0})
       : _items = items,
         super._();
 
@@ -278,7 +278,7 @@ class _$CartImpl extends _Cart {
   @JsonKey(name: 'coupon_discount')
   final String couponDiscount;
   @override
-  @JsonKey(name: 'item_count')
+  @JsonKey(name: 'items_count')
   final int itemCount;
 
   @override
@@ -351,7 +351,7 @@ abstract class _Cart extends Cart {
       @JsonKey(name: 'total') final String total,
       @JsonKey(name: 'coupon_code') final String? couponCode,
       @JsonKey(name: 'coupon_discount') final String couponDiscount,
-      @JsonKey(name: 'item_count') final int itemCount}) = _$CartImpl;
+      @JsonKey(name: 'items_count') final int itemCount}) = _$CartImpl;
   const _Cart._() : super._();
 
   factory _Cart.fromJson(Map<String, dynamic> json) = _$CartImpl.fromJson;
@@ -382,7 +382,7 @@ abstract class _Cart extends Cart {
   @JsonKey(name: 'coupon_discount')
   String get couponDiscount;
   @override
-  @JsonKey(name: 'item_count')
+  @JsonKey(name: 'items_count')
   int get itemCount;
 
   /// Create a copy of Cart

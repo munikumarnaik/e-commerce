@@ -26,7 +26,7 @@ mixin _$FoodDetails {
   String? get cuisineType => throw _privateConstructorUsedError;
   @JsonKey(name: 'spice_level')
   int get spiceLevel => throw _privateConstructorUsedError;
-  String? get calories => throw _privateConstructorUsedError;
+  int? get calories => throw _privateConstructorUsedError;
   String? get protein => throw _privateConstructorUsedError;
   String? get carbs => throw _privateConstructorUsedError;
   String? get fat => throw _privateConstructorUsedError;
@@ -63,7 +63,7 @@ abstract class $FoodDetailsCopyWith<$Res> {
       {@JsonKey(name: 'food_type') String? foodType,
       @JsonKey(name: 'cuisine_type') String? cuisineType,
       @JsonKey(name: 'spice_level') int spiceLevel,
-      String? calories,
+      int? calories,
       String? protein,
       String? carbs,
       String? fat,
@@ -120,7 +120,7 @@ class _$FoodDetailsCopyWithImpl<$Res, $Val extends FoodDetails>
       calories: freezed == calories
           ? _value.calories
           : calories // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as int?,
       protein: freezed == protein
           ? _value.protein
           : protein // ignore: cast_nullable_to_non_nullable
@@ -173,7 +173,7 @@ abstract class _$$FoodDetailsImplCopyWith<$Res>
       {@JsonKey(name: 'food_type') String? foodType,
       @JsonKey(name: 'cuisine_type') String? cuisineType,
       @JsonKey(name: 'spice_level') int spiceLevel,
-      String? calories,
+      int? calories,
       String? protein,
       String? carbs,
       String? fat,
@@ -228,7 +228,7 @@ class __$$FoodDetailsImplCopyWithImpl<$Res>
       calories: freezed == calories
           ? _value.calories
           : calories // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as int?,
       protein: freezed == protein
           ? _value.protein
           : protein // ignore: cast_nullable_to_non_nullable
@@ -300,7 +300,7 @@ class _$FoodDetailsImpl implements _FoodDetails {
   @JsonKey(name: 'spice_level')
   final int spiceLevel;
   @override
-  final String? calories;
+  final int? calories;
   @override
   final String? protein;
   @override
@@ -400,7 +400,7 @@ abstract class _FoodDetails implements FoodDetails {
           {@JsonKey(name: 'food_type') final String? foodType,
           @JsonKey(name: 'cuisine_type') final String? cuisineType,
           @JsonKey(name: 'spice_level') final int spiceLevel,
-          final String? calories,
+          final int? calories,
           final String? protein,
           final String? carbs,
           final String? fat,
@@ -425,7 +425,7 @@ abstract class _FoodDetails implements FoodDetails {
   @JsonKey(name: 'spice_level')
   int get spiceLevel;
   @override
-  String? get calories;
+  int? get calories;
   @override
   String? get protein;
   @override

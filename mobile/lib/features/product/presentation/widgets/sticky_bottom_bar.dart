@@ -4,12 +4,14 @@ import '../../../../core/constants/app_strings.dart';
 
 class StickyBottomBar extends StatelessWidget {
   final bool isAvailable;
+  final bool isLoading;
   final VoidCallback? onAddToCart;
   final VoidCallback? onBuyNow;
 
   const StickyBottomBar({
     super.key,
     this.isAvailable = true,
+    this.isLoading = false,
     this.onAddToCart,
     this.onBuyNow,
   });
@@ -44,9 +46,20 @@ class StickyBottomBar extends StatelessWidget {
                   child: SizedBox(
                     height: AppDimensions.buttonHeight,
                     child: OutlinedButton.icon(
-                      onPressed: onAddToCart,
-                      icon: const Icon(Icons.shopping_cart_outlined, size: 20),
-                      label: const Text(AppStrings.addToCart),
+                      onPressed: isLoading ? null : onAddToCart,
+                      icon: isLoading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.colorScheme.primary,
+                              ),
+                            )
+                          : const Icon(Icons.shopping_cart_outlined, size: 20),
+                      label: Text(
+                        isLoading ? 'Adding...' : AppStrings.addToCart,
+                      ),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: theme.colorScheme.primary),
                         shape: RoundedRectangleBorder(
@@ -63,7 +76,7 @@ class StickyBottomBar extends StatelessWidget {
                   child: SizedBox(
                     height: AppDimensions.buttonHeight,
                     child: FilledButton.icon(
-                      onPressed: onBuyNow,
+                      onPressed: isLoading ? null : onBuyNow,
                       icon: const Icon(Icons.flash_on_rounded, size: 20),
                       label: const Text(AppStrings.buyNow),
                       style: FilledButton.styleFrom(

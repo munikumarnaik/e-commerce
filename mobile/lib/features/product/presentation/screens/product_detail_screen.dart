@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/price_widget.dart';
 import '../../../../shared/widgets/rating_widget.dart';
+import '../../../cart/presentation/providers/cart_provider.dart';
 import '../../domain/models/product_detail_model.dart';
 import '../../domain/models/product_variant_model.dart';
 import '../providers/product_detail_provider.dart';
@@ -77,6 +80,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   ) {
     final isFood = product.productType == 'FOOD';
     final isWishlisted = wishlist.contains(product.id);
+    final isAddingToCart = ref.watch(
+      cartProvider.select((s) => s.isAddingToCart),
+    );
 
     return Column(
       children: [
@@ -265,6 +271,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         // Sticky bottom bar
         StickyBottomBar(
           isAvailable: product.isAvailable && product.stockQuantity > 0,
+          isLoading: isAddingToCart,
           onAddToCart: () => _addToCart(product),
           onBuyNow: () => _buyNow(product),
         ),
@@ -407,21 +414,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     );
   }
 
-  void _addToCart(ProductDetail product) {
-    ref.read(productDetailProvider(widget.slug));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Added to cart'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+  Future<void> _addToCart(ProductDetail product) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    try {
+      await ref.read(cartProvider.notifier).addToCart(
+            productId: product.id,
+            variantId: _selectedVariant?.id,
+          );
+      if (!mounted) return;
+      // Navigate to cart tab after successful add
+      context.go(RouteNames.cart);
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('Failed to add to cart. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: theme.colorScheme.error,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
-  void _buyNow(ProductDetail product) {
-    _addToCart(product);
+  Future<void> _buyNow(ProductDetail product) async {
+    await _addToCart(product);
   }
 }
 

@@ -8,6 +8,7 @@ class CartState {
   final CartStatus status;
   final Cart cart;
   final String? errorMessage;
+  final bool isAddingToCart;
   final bool isCouponLoading;
   final String? couponError;
 
@@ -15,6 +16,7 @@ class CartState {
     this.status = CartStatus.initial,
     Cart? cart,
     this.errorMessage,
+    this.isAddingToCart = false,
     this.isCouponLoading = false,
     this.couponError,
   }) : cart = cart ?? const Cart(id: '');
@@ -23,6 +25,7 @@ class CartState {
     CartStatus? status,
     Cart? cart,
     String? errorMessage,
+    bool? isAddingToCart,
     bool? isCouponLoading,
     String? couponError,
   }) {
@@ -30,6 +33,7 @@ class CartState {
       status: status ?? this.status,
       cart: cart ?? this.cart,
       errorMessage: errorMessage,
+      isAddingToCart: isAddingToCart ?? this.isAddingToCart,
       isCouponLoading: isCouponLoading ?? this.isCouponLoading,
       couponError: couponError,
     );
@@ -54,20 +58,30 @@ class CartNotifier extends StateNotifier<CartState> {
     }
   }
 
+  /// Adds product to cart. Throws on failure so callers can show error UI.
   Future<void> addToCart({
     required String productId,
     String? variantId,
     int quantity = 1,
   }) async {
+    state = state.copyWith(isAddingToCart: true);
     try {
       final cart = await _repository.addToCart(
         productId: productId,
         variantId: variantId,
         quantity: quantity,
       );
-      state = state.copyWith(status: CartStatus.loaded, cart: cart);
+      state = state.copyWith(
+        status: CartStatus.loaded,
+        cart: cart,
+        isAddingToCart: false,
+      );
     } catch (e) {
-      state = state.copyWith(errorMessage: e.toString());
+      state = state.copyWith(
+        isAddingToCart: false,
+        errorMessage: e.toString(),
+      );
+      rethrow;
     }
   }
 

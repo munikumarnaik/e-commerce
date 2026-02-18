@@ -348,10 +348,12 @@ CartProduct _$CartProductFromJson(Map<String, dynamic> json) {
 mixin _$CartProduct {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
-  String get slug => throw _privateConstructorUsedError;
+  String get slug =>
+      throw _privateConstructorUsedError; // product_type is not returned in cart item snapshots; default to empty string
   @JsonKey(name: 'product_type')
   String get productType => throw _privateConstructorUsedError;
-  String? get thumbnail => throw _privateConstructorUsedError;
+  String? get thumbnail =>
+      throw _privateConstructorUsedError; // price is not returned in cart item snapshots (use CartItem.unitPrice instead)
   String get price => throw _privateConstructorUsedError;
   @JsonKey(name: 'compare_at_price')
   String? get compareAtPrice => throw _privateConstructorUsedError;
@@ -577,9 +579,9 @@ class _$CartProductImpl implements _CartProduct {
       {required this.id,
       required this.name,
       required this.slug,
-      @JsonKey(name: 'product_type') required this.productType,
+      @JsonKey(name: 'product_type') this.productType = '',
       this.thumbnail,
-      required this.price,
+      this.price = '0.00',
       @JsonKey(name: 'compare_at_price') this.compareAtPrice,
       @JsonKey(name: 'stock_quantity') this.stockQuantity = 0,
       @JsonKey(name: 'is_available') this.isAvailable = true,
@@ -594,12 +596,15 @@ class _$CartProductImpl implements _CartProduct {
   final String name;
   @override
   final String slug;
+// product_type is not returned in cart item snapshots; default to empty string
   @override
   @JsonKey(name: 'product_type')
   final String productType;
   @override
   final String? thumbnail;
+// price is not returned in cart item snapshots (use CartItem.unitPrice instead)
   @override
+  @JsonKey()
   final String price;
   @override
   @JsonKey(name: 'compare_at_price')
@@ -666,9 +671,9 @@ abstract class _CartProduct implements CartProduct {
       {required final String id,
       required final String name,
       required final String slug,
-      @JsonKey(name: 'product_type') required final String productType,
+      @JsonKey(name: 'product_type') final String productType,
       final String? thumbnail,
-      required final String price,
+      final String price,
       @JsonKey(name: 'compare_at_price') final String? compareAtPrice,
       @JsonKey(name: 'stock_quantity') final int stockQuantity,
       @JsonKey(name: 'is_available') final bool isAvailable,
@@ -682,12 +687,14 @@ abstract class _CartProduct implements CartProduct {
   @override
   String get name;
   @override
-  String get slug;
+  String
+      get slug; // product_type is not returned in cart item snapshots; default to empty string
   @override
   @JsonKey(name: 'product_type')
   String get productType;
   @override
-  String? get thumbnail;
+  String?
+      get thumbnail; // price is not returned in cart item snapshots (use CartItem.unitPrice instead)
   @override
   String get price;
   @override

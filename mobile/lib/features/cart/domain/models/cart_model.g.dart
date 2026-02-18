@@ -19,7 +19,7 @@ _$CartImpl _$$CartImplFromJson(Map<String, dynamic> json) => _$CartImpl(
       total: json['total'] as String? ?? '0.00',
       couponCode: json['coupon_code'] as String?,
       couponDiscount: json['coupon_discount'] as String? ?? '0.00',
-      itemCount: (json['item_count'] as num?)?.toInt() ?? 0,
+      itemCount: (json['items_count'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$CartImplToJson(_$CartImpl instance) =>
@@ -33,5 +33,5 @@ Map<String, dynamic> _$$CartImplToJson(_$CartImpl instance) =>
       'total': instance.total,
       'coupon_code': instance.couponCode,
       'coupon_discount': instance.couponDiscount,
-      'item_count': instance.itemCount,
+      'items_count': instance.itemCount,
     };

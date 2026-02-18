@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
@@ -25,7 +26,8 @@ class CartScreen extends ConsumerWidget {
               : 'Cart',
         ),
         actions: [
-          if (cartState.status == CartStatus.loaded && cartState.cart.isNotEmpty)
+          if (cartState.status == CartStatus.loaded &&
+              cartState.cart.isNotEmpty)
             TextButton(
               onPressed: () => _showClearCartDialog(context, ref),
               child: Text(
@@ -82,7 +84,8 @@ class CartScreen extends ConsumerWidget {
         if (cartState.cart.isEmpty) {
           return EmptyStateWidget(
             title: 'Your cart is empty',
-            subtitle: 'Looks like you haven\'t added anything yet.\nStart browsing and add items you love!',
+            subtitle:
+                'Looks like you haven\'t added anything yet.\nStart browsing and add items you love!',
             icon: Icons.shopping_cart_outlined,
             actionLabel: 'Start Shopping',
             onAction: () {
@@ -289,6 +292,7 @@ class _CheckoutBar extends StatelessWidget {
 
           // Checkout button
           Expanded(
+            flex: 2,
             child: CustomButton(
               label: 'Proceed to Checkout',
               onPressed: onCheckout,

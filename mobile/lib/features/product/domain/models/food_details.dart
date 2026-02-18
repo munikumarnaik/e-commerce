@@ -9,7 +9,7 @@ class FoodDetails with _$FoodDetails {
     @JsonKey(name: 'food_type') String? foodType,
     @JsonKey(name: 'cuisine_type') String? cuisineType,
     @JsonKey(name: 'spice_level') @Default(0) int spiceLevel,
-    String? calories,
+    int? calories,
     String? protein,
     String? carbs,
     String? fat,

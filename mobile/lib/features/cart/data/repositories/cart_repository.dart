@@ -20,56 +20,57 @@ class CartRepository {
     }
   }
 
+  /// POST /cart/add/ → backend returns cart_item + cart_summary (not full Cart)
+  /// So we call getCart() afterwards to get the fresh full cart.
   Future<Cart> addToCart({
     required String productId,
     String? variantId,
     int quantity = 1,
   }) async {
     try {
-      final data = <String, dynamic>{
+      final body = <String, dynamic>{
         'product_id': productId,
         'quantity': quantity,
       };
-      if (variantId != null) data['variant_id'] = variantId;
-      final response = await _dio.post(ApiEndpoints.cartAdd, data: data);
-      final cartData = response.data['data'] ?? response.data;
-      return Cart.fromJson(cartData as Map<String, dynamic>);
+      if (variantId != null) body['variant_id'] = variantId;
+      await _dio.post(ApiEndpoints.cartAdd, data: body);
+      return getCart();
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
+  /// PATCH /cart/items/{id}/ → backend returns cart_summary + cart_item (not full Cart)
   Future<Cart> updateCartItem({
     required String itemId,
     required int quantity,
   }) async {
     try {
-      final response = await _dio.patch(
+      await _dio.patch(
         ApiEndpoints.cartItem(itemId),
         data: {'quantity': quantity},
       );
-      final data = response.data['data'] ?? response.data;
-      return Cart.fromJson(data as Map<String, dynamic>);
+      return getCart();
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
+  /// DELETE /cart/items/{id}/ → backend returns 204 No Content
   Future<Cart> removeCartItem(String itemId) async {
     try {
-      final response = await _dio.delete(ApiEndpoints.cartItem(itemId));
-      final data = response.data['data'] ?? response.data;
-      return Cart.fromJson(data as Map<String, dynamic>);
+      await _dio.delete(ApiEndpoints.cartItem(itemId));
+      return getCart();
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
+  /// DELETE /cart/clear/ → backend returns 204 No Content
   Future<Cart> clearCart() async {
     try {
-      final response = await _dio.delete(ApiEndpoints.cartClear);
-      final data = response.data['data'] ?? response.data;
-      return Cart.fromJson(data as Map<String, dynamic>);
+      await _dio.delete(ApiEndpoints.cartClear);
+      return Cart.empty();
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -77,12 +78,11 @@ class CartRepository {
 
   Future<Cart> applyCoupon(String couponCode) async {
     try {
-      final response = await _dio.post(
+      await _dio.post(
         ApiEndpoints.applyCoupon,
         data: {'coupon_code': couponCode},
       );
-      final data = response.data['data'] ?? response.data;
-      return Cart.fromJson(data as Map<String, dynamic>);
+      return getCart();
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -90,9 +90,8 @@ class CartRepository {
 
   Future<Cart> removeCoupon() async {
     try {
-      final response = await _dio.delete(ApiEndpoints.removeCoupon);
-      final data = response.data['data'] ?? response.data;
-      return Cart.fromJson(data as Map<String, dynamic>);
+      await _dio.delete(ApiEndpoints.removeCoupon);
+      return getCart();
     } on DioException catch (e) {
       throw _handleError(e);
     }

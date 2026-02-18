@@ -31,9 +31,11 @@ class CartProduct with _$CartProduct {
     required String id,
     required String name,
     required String slug,
-    @JsonKey(name: 'product_type') required String productType,
+    // product_type is not returned in cart item snapshots; default to empty string
+    @JsonKey(name: 'product_type') @Default('') String productType,
     String? thumbnail,
-    required String price,
+    // price is not returned in cart item snapshots (use CartItem.unitPrice instead)
+    @Default('0.00') String price,
     @JsonKey(name: 'compare_at_price') String? compareAtPrice,
     @JsonKey(name: 'stock_quantity') @Default(0) int stockQuantity,
     @JsonKey(name: 'is_available') @Default(true) bool isAvailable,

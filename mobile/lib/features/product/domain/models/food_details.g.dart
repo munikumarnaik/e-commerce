@@ -11,7 +11,7 @@ _$FoodDetailsImpl _$$FoodDetailsImplFromJson(Map<String, dynamic> json) =>
       foodType: json['food_type'] as String?,
       cuisineType: json['cuisine_type'] as String?,
       spiceLevel: (json['spice_level'] as num?)?.toInt() ?? 0,
-      calories: json['calories'] as String?,
+      calories: (json['calories'] as num?)?.toInt(),
       protein: json['protein'] as String?,
       carbs: json['carbs'] as String?,
       fat: json['fat'] as String?,
