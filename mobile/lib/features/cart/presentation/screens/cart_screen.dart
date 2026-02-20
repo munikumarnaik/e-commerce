@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../providers/cart_provider.dart';
@@ -190,7 +192,7 @@ class CartScreen extends ConsumerWidget {
           total: cartState.cart.totalValue,
           itemCount: cartState.cart.items.length,
           onCheckout: () {
-            // TODO: Navigate to checkout (Phase 4)
+            context.push(RouteNames.checkout);
           },
         ),
       ],

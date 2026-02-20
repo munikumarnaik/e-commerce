@@ -393,7 +393,8 @@ mixin _$Product {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get slug => throw _privateConstructorUsedError;
-  String? get sku => throw _privateConstructorUsedError;
+  String? get sku =>
+      throw _privateConstructorUsedError; // product_type is absent in wishlist/cart product snapshots — default to ''
   @JsonKey(name: 'product_type')
   String get productType => throw _privateConstructorUsedError;
   ProductCategory? get category => throw _privateConstructorUsedError;
@@ -879,7 +880,7 @@ class _$ProductImpl implements _Product {
       required this.name,
       required this.slug,
       this.sku,
-      @JsonKey(name: 'product_type') required this.productType,
+      @JsonKey(name: 'product_type') this.productType = '',
       this.category,
       this.brand,
       this.description,
@@ -916,6 +917,7 @@ class _$ProductImpl implements _Product {
   final String slug;
   @override
   final String? sku;
+// product_type is absent in wishlist/cart product snapshots — default to ''
   @override
   @JsonKey(name: 'product_type')
   final String productType;
@@ -1095,7 +1097,7 @@ abstract class _Product implements Product {
       required final String name,
       required final String slug,
       final String? sku,
-      @JsonKey(name: 'product_type') required final String productType,
+      @JsonKey(name: 'product_type') final String productType,
       final ProductCategory? category,
       final ProductBrand? brand,
       final String? description,
@@ -1128,7 +1130,8 @@ abstract class _Product implements Product {
   @override
   String get slug;
   @override
-  String? get sku;
+  String?
+      get sku; // product_type is absent in wishlist/cart product snapshots — default to ''
   @override
   @JsonKey(name: 'product_type')
   String get productType;

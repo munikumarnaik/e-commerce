@@ -42,7 +42,7 @@ _$ProductImpl _$$ProductImplFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       slug: json['slug'] as String,
       sku: json['sku'] as String?,
-      productType: json['product_type'] as String,
+      productType: json['product_type'] as String? ?? '',
       category: json['category'] == null
           ? null
           : ProductCategory.fromJson(json['category'] as Map<String, dynamic>),

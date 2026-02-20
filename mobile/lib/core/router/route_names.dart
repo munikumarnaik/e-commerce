@@ -24,8 +24,9 @@ class RouteNames {
 
   // Orders
   static const orders = '/orders';
-  static const orderDetail = '/orders/:id';
-  static const orderTrack = '/orders/:id/track';
+  static const orderDetail = '/orders/:orderNumber';
+  static const orderTrack = '/orders/:orderNumber/track';
+  static const orderSuccess = '/order-success';
 
   // Checkout
   static const checkout = '/checkout';

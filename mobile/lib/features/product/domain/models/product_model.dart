@@ -47,7 +47,8 @@ class Product with _$Product {
     required String name,
     required String slug,
     String? sku,
-    @JsonKey(name: 'product_type') required String productType,
+    // product_type is absent in wishlist/cart product snapshots — default to ''
+    @JsonKey(name: 'product_type') @Default('') String productType,
     ProductCategory? category,
     ProductBrand? brand,
     String? description,

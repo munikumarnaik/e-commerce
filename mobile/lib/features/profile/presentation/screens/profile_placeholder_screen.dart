@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -17,12 +19,12 @@ class ProfilePlaceholderScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(AppDimensions.lg),
-        child: Column(
-          children: [
-            // Avatar
-            CircleAvatar(
+        children: [
+          // Avatar
+          Center(
+            child: CircleAvatar(
               radius: 40,
               backgroundColor: theme.colorScheme.primaryContainer,
               child: Text(
@@ -35,42 +37,66 @@ class ProfilePlaceholderScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppDimensions.md),
-            Text(
+          ),
+          const SizedBox(height: AppDimensions.md),
+          Center(
+            child: Text(
               user != null ? '${user.firstName} ${user.lastName}' : 'Guest',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (user?.email != null) ...[
-              const SizedBox(height: 4),
-              Text(
+          ),
+          if (user?.email != null) ...[
+            const SizedBox(height: 4),
+            Center(
+              child: Text(
                 user!.email,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-            ],
+            ),
+          ],
+          const SizedBox(height: AppDimensions.xl),
 
-            const Spacer(),
+          // Menu items
+          _ProfileMenuItem(
+            icon: Icons.receipt_long_rounded,
+            title: 'My Orders',
+            subtitle: 'View order history & track orders',
+            onTap: () => context.push(RouteNames.orders),
+          ),
+          _ProfileMenuItem(
+            icon: Icons.location_on_rounded,
+            title: 'My Addresses',
+            subtitle: 'Manage delivery addresses',
+            onTap: () => context.push(RouteNames.profileAddresses),
+          ),
+          _ProfileMenuItem(
+            icon: Icons.favorite_rounded,
+            title: 'Wishlist',
+            subtitle: 'Your saved items',
+            onTap: () => context.push(RouteNames.wishlist),
+          ),
+          const SizedBox(height: AppDimensions.xl),
 
-            // Logout button
-            SizedBox(
-              width: double.infinity,
-              height: AppDimensions.buttonHeight,
-              child: OutlinedButton.icon(
-                onPressed: () => _showLogoutDialog(context, ref),
-                icon: const Icon(Icons.logout_rounded),
-                label: const Text(AppStrings.logout),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+          // Logout button
+          SizedBox(
+            width: double.infinity,
+            height: AppDimensions.buttonHeight,
+            child: OutlinedButton.icon(
+              onPressed: () => _showLogoutDialog(context, ref),
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text(AppStrings.logout),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.error,
+                side: BorderSide(color: theme.colorScheme.error),
               ),
             ),
-            const SizedBox(height: AppDimensions.lg),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppDimensions.lg),
+        ],
       ),
     );
   }
@@ -97,6 +123,50 @@ class ProfilePlaceholderScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ProfileMenuItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: AppDimensions.sm),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: theme.colorScheme.primary),
+        title: Text(title,
+            style: theme.textTheme.bodyLarge
+                ?.copyWith(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        ),
       ),
     );
   }

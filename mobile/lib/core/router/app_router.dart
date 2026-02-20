@@ -5,10 +5,15 @@ import '../../features/auth/domain/models/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/admin/presentation/screens/admin_create_product_screen.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/address/presentation/screens/address_list_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
+import '../../features/checkout/presentation/screens/checkout_screen.dart';
+import '../../features/order/presentation/screens/order_detail_screen.dart';
+import '../../features/order/presentation/screens/order_list_screen.dart';
+import '../../features/order/presentation/screens/order_success_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/product/domain/models/product_filter.dart';
@@ -160,7 +165,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Filtered product listing (full-screen, outside shell)
-      // Pass title and ProductFilter via extra: {'title': ..., 'filter': ...}
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/filtered-products',
@@ -172,6 +176,50 @@ final routerProvider = Provider<GoRouter>((ref) {
             title: title,
             filter: filter,
           );
+        },
+      ),
+
+      // ── Phase 4: Address, Checkout & Orders ──
+
+      // Addresses (full-screen, outside shell)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.profileAddresses,
+        builder: (context, state) => const AddressListScreen(),
+      ),
+
+      // Checkout (full-screen)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.checkout,
+        builder: (context, state) => const CheckoutScreen(),
+      ),
+
+      // Order success (full-screen, no back)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.orderSuccess,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final orderNumber = extra['order_number'] as String? ?? '';
+          return OrderSuccessScreen(orderNumber: orderNumber);
+        },
+      ),
+
+      // Orders list
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.orders,
+        builder: (context, state) => const OrderListScreen(),
+      ),
+
+      // Order detail
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/orders/:orderNumber',
+        builder: (context, state) {
+          final orderNumber = state.pathParameters['orderNumber']!;
+          return OrderDetailScreen(orderNumber: orderNumber);
         },
       ),
     ],
