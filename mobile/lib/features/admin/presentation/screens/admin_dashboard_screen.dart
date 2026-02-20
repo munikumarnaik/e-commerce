@@ -56,6 +56,17 @@ class _DashboardBody extends ConsumerWidget {
             pinned: true,
             backgroundColor: theme.colorScheme.surface,
             surfaceTintColor: Colors.transparent,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.refresh_rounded,
+                  color: theme.colorScheme.onSurface,
+                ),
+                tooltip: 'Refresh',
+                onPressed: () => ref.invalidate(adminStatsProvider),
+              ),
+              const SizedBox(width: 4),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               titlePadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -122,28 +133,8 @@ class _DashboardBody extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Action Buttons Row ──
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.refresh_rounded,
-                          label: 'Refresh',
-                          color: const Color(0xFF3B82F6),
-                          onTap: () => ref.invalidate(adminStatsProvider),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.logout_rounded,
-                          label: 'Logout',
-                          color: const Color(0xFFEF4444),
-                          onTap: () => _showLogoutDialog(context, ref),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // ── Add Product (top CTA) ──
+                  const DashboardAddProductCard(),
                   const SizedBox(height: 16),
 
                   // ── Users & Revenue ──
@@ -239,8 +230,13 @@ class _DashboardBody extends ConsumerWidget {
                   DashboardProductsCard(stats: stats),
                   const SizedBox(height: 16),
 
-                  // ── Add Product ──
-                  const DashboardAddProductCard(),
+                  // ── Logout (bottom) ──
+                  _ActionButton(
+                    icon: Icons.logout_rounded,
+                    label: 'Logout',
+                    color: const Color(0xFFEF4444),
+                    onTap: () => _showLogoutDialog(context, ref),
+                  ),
                   const SizedBox(height: 32),
                 ],
               ),
