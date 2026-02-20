@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/constants/app_strings.dart';
-import '../providers/create_product_provider.dart';
+import '../../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/constants/app_strings.dart';
+import '../../providers/create_product_provider.dart';
 import 'admin_form_field.dart';
 
 /// Allows digits and at most one decimal point.

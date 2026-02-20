@@ -6,11 +6,11 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/models/product_form_state.dart';
 import '../providers/create_product_provider.dart';
-import '../widgets/step_basic_info.dart';
-import '../widgets/step_images.dart';
-import '../widgets/step_indicator.dart';
-import '../widgets/step_pricing.dart';
-import '../widgets/step_type_details.dart';
+import '../widgets/create_product_steps/step_basic_info.dart';
+import '../widgets/create_product_steps/step_images.dart';
+import '../widgets/create_product_steps/step_indicator.dart';
+import '../widgets/create_product_steps/step_pricing.dart';
+import '../widgets/create_product_steps/step_type_details.dart';
 
 class AdminCreateProductScreen extends ConsumerStatefulWidget {
   const AdminCreateProductScreen({super.key});
@@ -77,8 +77,7 @@ class _AdminCreateProductScreenState
 
           // Step label
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: AppDimensions.md),
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
             child: Text(
               '${AppStrings.step} ${formState.currentStep + 1}: ${_stepLabels[formState.currentStep]}',
               style: theme.textTheme.labelLarge?.copyWith(
@@ -202,14 +201,12 @@ class _NavigationBar extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: isSubmitting ? null : onBack,
                     style: OutlinedButton.styleFrom(
-                      minimumSize:
-                          const Size(0, AppDimensions.buttonHeight),
+                      minimumSize: const Size(0, AppDimensions.buttonHeight),
                     ),
                     child: const Text(AppStrings.back),
                   ),
                 ),
-              if (currentStep > 0)
-                const SizedBox(width: AppDimensions.md),
+              if (currentStep > 0) const SizedBox(width: AppDimensions.md),
 
               // Next / Submit button
               Expanded(
@@ -223,8 +220,7 @@ class _NavigationBar extends StatelessWidget {
                               ? onNext
                               : null,
                   style: FilledButton.styleFrom(
-                    minimumSize:
-                        const Size(0, AppDimensions.buttonHeight),
+                    minimumSize: const Size(0, AppDimensions.buttonHeight),
                   ),
                   child: Text(
                     currentStep == 3 ? AppStrings.submit : AppStrings.next,

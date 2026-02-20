@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/constants/app_strings.dart';
-import '../providers/create_product_provider.dart';
+import '../../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/constants/app_strings.dart';
+import '../../providers/create_product_provider.dart';
 
 class StepImages extends ConsumerWidget {
   const StepImages({super.key});

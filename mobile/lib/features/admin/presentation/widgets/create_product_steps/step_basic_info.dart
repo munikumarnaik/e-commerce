@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/constants/app_strings.dart';
-import '../../../product/presentation/providers/category_provider.dart';
-import '../../data/repositories/admin_product_repository.dart';
-import '../providers/create_product_provider.dart';
+import '../../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/constants/app_strings.dart';
+import '../../../../product/presentation/providers/category_provider.dart';
+import '../../../data/repositories/admin_product_repository.dart';
+import '../../providers/create_product_provider.dart';
 import 'admin_form_field.dart';
 
 class StepBasicInfo extends ConsumerWidget {
@@ -140,15 +140,13 @@ class _CategorySection extends ConsumerWidget {
                 minimumSize: const Size(48, 52),
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusMd),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                 ),
               ),
               onPressed: () async {
                 final created = await showDialog<bool>(
                   context: context,
-                  builder: (_) =>
-                      _AddCategoryDialog(productType: productType),
+                  builder: (_) => _AddCategoryDialog(productType: productType),
                 );
                 if (created == true) {
                   // Refresh category dropdown with newly created category
@@ -301,8 +299,7 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
       ),
       actions: [
         TextButton(
-          onPressed:
-              _isLoading ? null : () => Navigator.pop(context, false),
+          onPressed: _isLoading ? null : () => Navigator.pop(context, false),
           child: const Text('Cancel'),
         ),
         FilledButton(

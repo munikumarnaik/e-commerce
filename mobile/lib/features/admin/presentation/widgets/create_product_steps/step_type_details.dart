@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/constants/app_strings.dart';
-import '../providers/create_product_provider.dart';
+import '../../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/constants/app_strings.dart';
+import '../../providers/create_product_provider.dart';
 import 'admin_form_field.dart';
 
 // Shared formatters
@@ -322,8 +322,7 @@ class _ClothingDetailsForm extends ConsumerWidget {
               DropdownMenuItem(value: 'SUMMER', child: Text('Summer')),
               DropdownMenuItem(value: 'WINTER', child: Text('Winter')),
               DropdownMenuItem(value: 'MONSOON', child: Text('Monsoon')),
-              DropdownMenuItem(
-                  value: 'ALL_SEASON', child: Text('All Season')),
+              DropdownMenuItem(value: 'ALL_SEASON', child: Text('All Season')),
             ],
             onChanged: notifier.updateSeason,
           ),
