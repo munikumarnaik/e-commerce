@@ -67,4 +67,9 @@ class AdminProductRepository {
     );
     return _extractData(response.data);
   }
+
+  Future<Map<String, dynamic>> getDashboardStats() async {
+    final response = await _dio.get(ApiEndpoints.adminDashboardStats);
+    return _extractData(response.data);
+  }
 }

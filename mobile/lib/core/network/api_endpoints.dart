@@ -56,6 +56,9 @@ class ApiEndpoints {
   static const paymentVerify = '/payments/verify/';
   static String paymentStatus(String orderNumber) => '/payments/$orderNumber/';
 
+  // Admin
+  static const adminDashboardStats = '/admin/dashboard/stats/';
+
   // Admin Product Management
   static const createProduct = '/products/create/';
   static const categoryCreate = '/categories/create/';

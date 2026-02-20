@@ -330,6 +330,7 @@ def admin_update_order_status(order_id, new_status, changed_by, tracking_number=
 def get_admin_dashboard_stats():
     """Return aggregate stats for admin dashboard."""
     from apps.users.models import User
+    from apps.products.models import Product
 
     now = timezone.now()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -340,6 +341,7 @@ def get_admin_dashboard_stats():
     ).aggregate(total=Sum('total'))['total'] or Decimal('0.00')
 
     pending_orders = Order.objects.filter(status=Order.Status.PENDING).count()
+    completed_orders = Order.objects.filter(status=Order.Status.DELIVERED).count()
     total_users = User.objects.filter(role=User.Role.CUSTOMER).count()
     total_vendors = User.objects.filter(role=User.Role.VENDOR).count()
 
@@ -355,6 +357,24 @@ def get_admin_dashboard_stats():
     status_breakdown = dict(
         Order.objects.values_list('status').annotate(count=Count('id')).values_list('status', 'count')
     )
+
+    # Orders by product type (orders that contain at least one food/clothing item)
+    food_orders = Order.objects.filter(
+        items__product__product_type='FOOD'
+    ).distinct().count()
+    clothing_orders = Order.objects.filter(
+        items__product__product_type='CLOTHING'
+    ).distinct().count()
+
+    # Product stats
+    active_products = Product.objects.filter(is_active=True)
+    total_products = active_products.count()
+    out_of_stock_products = active_products.filter(stock_quantity=0).count()
+    low_stock_products = active_products.filter(
+        stock_quantity__gt=0, stock_quantity__lte=5
+    ).count()
+    food_products = active_products.filter(product_type='FOOD').count()
+    clothing_products = active_products.filter(product_type='CLOTHING').count()
 
     # Top products by order count (last 30 days)
     thirty_days_ago = now - timezone.timedelta(days=30)
@@ -378,11 +398,23 @@ def get_admin_dashboard_stats():
             'total_orders': total_orders,
             'total_revenue': str(total_revenue),
             'pending_orders': pending_orders,
+            'completed_orders': completed_orders,
         },
         'today': {
             'orders': today_orders,
             'revenue': str(today_revenue),
             'new_users': new_users_today,
+        },
+        'product_type_orders': {
+            'food_orders': food_orders,
+            'clothing_orders': clothing_orders,
+        },
+        'product_stats': {
+            'total_products': total_products,
+            'out_of_stock': out_of_stock_products,
+            'low_stock': low_stock_products,
+            'food_products': food_products,
+            'clothing_products': clothing_products,
         },
         'status_breakdown': status_breakdown,
         'top_products': top_products,
