@@ -11,6 +11,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../features/checkout/presentation/screens/checkout_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/order/presentation/screens/order_detail_screen.dart';
 import '../../features/order/presentation/screens/order_list_screen.dart';
 import '../../features/order/presentation/screens/order_success_screen.dart';
@@ -51,9 +52,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authenticated = authState is AuthAuthenticated ? authState : null;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == RouteNames.splash;
+      final isOnboarding = state.matchedLocation == RouteNames.onboarding;
       final isAdminRoute = state.matchedLocation.startsWith('/admin');
 
-      if (isSplash) return null;
+      if (isSplash || isOnboarding) return null;
       if (authenticated == null && !isAuthRoute) return RouteNames.login;
       if (authenticated != null && isAuthRoute) {
         final role = authenticated.user.role;
@@ -71,6 +73,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.splash,
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: RouteNames.login,
@@ -127,8 +133,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: RouteNames.profile,
-                builder: (context, state) =>
-                    const ProfilePlaceholderScreen(),
+                builder: (context, state) => const ProfilePlaceholderScreen(),
               ),
             ],
           ),

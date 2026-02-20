@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../shared/providers/storage_providers.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/splash_loading_bar.dart';
@@ -33,6 +34,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final state = ref.read(authProvider);
     if (state is AuthAuthenticated) {
+      // Already logged in — go straight to home/admin
       final role = state.user.role;
       if (role == 'ADMIN' || role == 'VENDOR') {
         context.go(RouteNames.admin);
@@ -40,7 +42,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         context.go(RouteNames.home);
       }
     } else {
-      context.go(RouteNames.login);
+      // Check if first-time user
+      final storage = ref.read(localStorageProvider);
+      if (!storage.isOnboardingComplete) {
+        context.go(RouteNames.onboarding);
+      } else {
+        context.go(RouteNames.login);
+      }
     }
   }
 
