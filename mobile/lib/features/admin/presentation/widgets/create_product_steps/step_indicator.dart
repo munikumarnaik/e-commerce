@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/constants/app_dimensions.dart';
 
 class StepIndicator extends StatelessWidget {
   final int currentStep;
@@ -67,8 +67,8 @@ class StepIndicator extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 2,
-                      margin:
-                          const EdgeInsets.symmetric(horizontal: AppDimensions.xs),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.xs),
                       color: index < currentStep
                           ? theme.colorScheme.primary
                           : theme.colorScheme.surfaceContainerHighest,
