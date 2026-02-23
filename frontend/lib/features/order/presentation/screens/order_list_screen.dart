@@ -9,6 +9,21 @@ import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../domain/models/order_model.dart';
 import '../providers/order_provider.dart';
 
+// ── Filter chip config ──
+const _kFilters = [
+  _FilterChip(label: 'All', status: null),
+  _FilterChip(label: 'Active', status: 'ACTIVE'),
+  _FilterChip(label: 'Delivered', status: 'DELIVERED'),
+  _FilterChip(label: 'Cancelled', status: 'CANCELLED'),
+];
+
+class _FilterChip {
+  final String label;
+  final String? status;
+
+  const _FilterChip({required this.label, required this.status});
+}
+
 class OrderListScreen extends ConsumerStatefulWidget {
   const OrderListScreen({super.key});
 
@@ -26,13 +41,23 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   }
 
   @override
-  Widget build(BuildContext context, ) {
+  Widget build(BuildContext context) {
     final state = ref.watch(orderListProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Orders')),
-      body: _buildBody(state, theme),
+      body: Column(
+        children: [
+          // ── Status filter chips ──
+          _FilterBar(
+            selectedStatus: state.selectedStatus,
+            onSelected: (status) =>
+                ref.read(orderListProvider.notifier).filterByStatus(status),
+          ),
+          Expanded(child: _buildBody(state, theme)),
+        ],
+      ),
     );
   }
 
@@ -68,7 +93,9 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       case OrderListStatus.loaded:
         if (state.orders.isEmpty) {
           return EmptyStateWidget(
-            title: 'No orders yet',
+            title: state.selectedStatus != null
+                ? 'No ${_labelForStatus(state.selectedStatus!)} orders'
+                : 'No orders yet',
             subtitle: 'Your order history will appear here.',
             icon: Icons.receipt_long_outlined,
             actionLabel: 'Start Shopping',
@@ -95,7 +122,93 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
         );
     }
   }
+
+  String _labelForStatus(String status) {
+    return switch (status) {
+      'DELIVERED' => 'delivered',
+      'CANCELLED' => 'cancelled',
+      _ => status.toLowerCase(),
+    };
+  }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Filter Bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FilterBar extends StatelessWidget {
+  final String? selectedStatus;
+  final void Function(String?) onSelected;
+
+  const _FilterBar({required this.selectedStatus, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.md,
+          vertical: 8,
+        ),
+        itemCount: _kFilters.length,
+        itemBuilder: (context, index) {
+          final filter = _kFilters[index];
+          final isSelected = filter.status == selectedStatus;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              child: FilterChip(
+                label: Text(filter.label),
+                selected: isSelected,
+                onSelected: (_) => onSelected(filter.status),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight:
+                      isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                selectedColor: theme.colorScheme.primary,
+                checkmarkColor: theme.colorScheme.onPrimary,
+                side: BorderSide(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusFull),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                showCheckmark: false,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Order Card
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _OrderCard extends StatelessWidget {
   final Order order;

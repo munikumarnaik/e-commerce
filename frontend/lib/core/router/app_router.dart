@@ -18,6 +18,7 @@ import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/order/presentation/screens/order_detail_screen.dart';
 import '../../features/order/presentation/screens/order_list_screen.dart';
 import '../../features/order/presentation/screens/order_success_screen.dart';
+import '../../features/order/presentation/screens/order_track_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/product/domain/models/product_filter.dart';
@@ -228,6 +229,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final orderNumber = state.pathParameters['orderNumber']!;
           return OrderDetailScreen(orderNumber: orderNumber);
+        },
+      ),
+
+      // Order tracking
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/orders/:orderNumber/track',
+        builder: (context, state) {
+          final orderNumber = state.pathParameters['orderNumber']!;
+          return OrderTrackScreen(orderNumber: orderNumber);
         },
       ),
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
@@ -217,7 +218,30 @@ class OrderDetailScreen extends ConsumerWidget {
           const SizedBox(height: AppDimensions.md),
         ],
 
-        // Cancel button
+        // ── Track order (for active orders) ──
+        if (_isTrackable(order.status)) ...[
+          CustomButton(
+            label: 'Track Order',
+            onPressed: () => context.push(
+              '/orders/${order.orderNumber}/track',
+            ),
+            icon: Icons.location_on_rounded,
+          ),
+          const SizedBox(height: AppDimensions.sm),
+        ],
+
+        // ── Reorder (for delivered/cancelled) ──
+        if (order.status == 'DELIVERED' || order.status == 'CANCELLED') ...[
+          CustomButton(
+            label: 'Reorder',
+            onPressed: () => _handleReorder(context, ref, order),
+            variant: ButtonVariant.outlined,
+            icon: Icons.replay_rounded,
+          ),
+          const SizedBox(height: AppDimensions.sm),
+        ],
+
+        // ── Cancel button ──
         if (order.canCancel) ...[
           CustomButton(
             label: 'Cancel Order',
@@ -231,6 +255,39 @@ class OrderDetailScreen extends ConsumerWidget {
         const SizedBox(height: AppDimensions.xl),
       ],
     );
+  }
+
+  bool _isTrackable(String status) {
+    const trackable = {
+      'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY',
+    };
+    return trackable.contains(status);
+  }
+
+  Future<void> _handleReorder(
+      BuildContext context, WidgetRef ref, Order order) async {
+    final result = await ref
+        .read(orderListProvider.notifier)
+        .reorder(order.orderNumber);
+    if (!context.mounted) return;
+    if (result != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result['message'] as String? ?? 'Items added to cart.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      context.go('/cart');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to reorder. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showCancelDialog(

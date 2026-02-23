@@ -8,22 +8,29 @@ class OrderListState {
   final OrderListStatus status;
   final List<Order> orders;
   final String? error;
+  final String? selectedStatus; // null = All
 
   const OrderListState({
     this.status = OrderListStatus.initial,
     this.orders = const [],
     this.error,
+    this.selectedStatus,
   });
 
   OrderListState copyWith({
     OrderListStatus? status,
     List<Order>? orders,
     String? error,
+    String? selectedStatus,
+    bool clearSelectedStatus = false,
   }) {
     return OrderListState(
       status: status ?? this.status,
       orders: orders ?? this.orders,
       error: error,
+      selectedStatus: clearSelectedStatus
+          ? null
+          : (selectedStatus ?? this.selectedStatus),
     );
   }
 }
@@ -36,7 +43,7 @@ class OrderListNotifier extends StateNotifier<OrderListState> {
   Future<void> loadOrders() async {
     state = state.copyWith(status: OrderListStatus.loading);
     try {
-      final orders = await _repository.getOrders();
+      final orders = await _repository.getOrdersByStatus(state.selectedStatus);
       state = state.copyWith(
         status: OrderListStatus.loaded,
         orders: orders,
@@ -49,6 +56,15 @@ class OrderListNotifier extends StateNotifier<OrderListState> {
     }
   }
 
+  Future<void> filterByStatus(String? status) async {
+    if (status == null) {
+      state = state.copyWith(clearSelectedStatus: true);
+    } else {
+      state = state.copyWith(selectedStatus: status);
+    }
+    await loadOrders();
+  }
+
   Future<bool> cancelOrder(String orderNumber) async {
     try {
       await _repository.cancelOrder(orderNumber);
@@ -57,6 +73,15 @@ class OrderListNotifier extends StateNotifier<OrderListState> {
     } catch (e) {
       state = state.copyWith(error: e.toString());
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> reorder(String orderNumber) async {
+    try {
+      return await _repository.reorder(orderNumber);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return null;
     }
   }
 }
@@ -71,4 +96,11 @@ final orderDetailProvider =
     FutureProvider.autoDispose.family<Order, String>((ref, orderNumber) async {
   final repository = ref.watch(orderRepositoryProvider);
   return repository.getOrderDetail(orderNumber);
+});
+
+final orderTrackProvider =
+    FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
+        (ref, orderNumber) async {
+  final repository = ref.watch(orderRepositoryProvider);
+  return repository.trackOrder(orderNumber);
 });

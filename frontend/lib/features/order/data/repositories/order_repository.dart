@@ -67,9 +67,34 @@ class OrderRepository {
     }
   }
 
-  Future<void> reorder(String orderNumber) async {
+  Future<Map<String, dynamic>> reorder(String orderNumber) async {
     try {
-      await _dio.post(ApiEndpoints.orderReorder(orderNumber));
+      final response = await _dio.post(ApiEndpoints.orderReorder(orderNumber));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> trackOrder(String orderNumber) async {
+    try {
+      final response = await _dio.get(ApiEndpoints.orderTrack(orderNumber));
+      final data = response.data['data'] ?? response.data;
+      return data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<List<Order>> getOrdersByStatus(String? status) async {
+    try {
+      final queryParams = status != null ? {'status': status} : <String, dynamic>{};
+      final response = await _dio.get(ApiEndpoints.orders, queryParameters: queryParams);
+      final data = response.data['data'] ?? response.data;
+      final results = data['results'] as List? ?? data as List;
+      return results
+          .map((e) => Order.fromJson(e as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
       throw _handleError(e);
     }
