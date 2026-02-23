@@ -2,7 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../cart/presentation/providers/cart_provider.dart';
 import '../../../order/data/repositories/order_repository.dart';
 
-enum CheckoutStatus { idle, processing, success, error }
+enum CheckoutStatus {
+  idle,
+  processing,
+  success,          // COD order confirmed — go to order success
+  pendingPayment,   // ONLINE order created — go to payment screen
+  error,
+}
 
 class CheckoutState {
   final CheckoutStatus status;
@@ -12,6 +18,7 @@ class CheckoutState {
   final String? error;
   final String? orderNumber;
   final String? orderId;
+  final double orderTotal; // captured for routing to payment screen
 
   const CheckoutState({
     this.status = CheckoutStatus.idle,
@@ -21,6 +28,7 @@ class CheckoutState {
     this.error,
     this.orderNumber,
     this.orderId,
+    this.orderTotal = 0.0,
   });
 
   CheckoutState copyWith({
@@ -31,6 +39,7 @@ class CheckoutState {
     String? error,
     String? orderNumber,
     String? orderId,
+    double? orderTotal,
   }) {
     return CheckoutState(
       status: status ?? this.status,
@@ -40,6 +49,7 @@ class CheckoutState {
       error: error,
       orderNumber: orderNumber ?? this.orderNumber,
       orderId: orderId ?? this.orderId,
+      orderTotal: orderTotal ?? this.orderTotal,
     );
   }
 }
@@ -63,7 +73,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     state = state.copyWith(customerNote: note);
   }
 
-  Future<bool> placeOrder({String? couponCode}) async {
+  Future<bool> placeOrder({String? couponCode, double? cartTotal}) async {
     if (state.selectedAddressId == null) {
       state = state.copyWith(
         status: CheckoutStatus.error,
@@ -82,14 +92,30 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         couponCode: couponCode,
       );
 
-      state = state.copyWith(
-        status: CheckoutStatus.success,
-        orderNumber: result['order_number'] as String?,
-        orderId: result['order_id']?.toString(),
-      );
+      final orderNumber = result['order_number'] as String?;
+      final orderId = result['order_id']?.toString();
+      final total = cartTotal ??
+          double.tryParse(result['total']?.toString() ?? '0') ??
+          0.0;
 
-      // Refresh cart (it should be empty now)
-      _ref.read(cartProvider.notifier).loadCart();
+      if (state.paymentMethod == 'ONLINE') {
+        // Order created — send user to payment gateway
+        state = state.copyWith(
+          status: CheckoutStatus.pendingPayment,
+          orderNumber: orderNumber,
+          orderId: orderId,
+          orderTotal: total,
+        );
+      } else {
+        // COD — order fully confirmed
+        state = state.copyWith(
+          status: CheckoutStatus.success,
+          orderNumber: orderNumber,
+          orderId: orderId,
+        );
+        // Refresh cart
+        _ref.read(cartProvider.notifier).loadCart();
+      }
 
       return true;
     } catch (e) {

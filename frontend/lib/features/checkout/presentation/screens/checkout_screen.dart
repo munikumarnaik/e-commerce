@@ -51,10 +51,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     // Listen for success
     ref.listen<CheckoutState>(checkoutProvider, (prev, next) {
       if (next.status == CheckoutStatus.success && next.orderNumber != null) {
+        // COD confirmed → order success
         context.go(
           RouteNames.orderSuccess,
+          extra: {'order_number': next.orderNumber},
+        );
+      } else if (next.status == CheckoutStatus.pendingPayment &&
+          next.orderNumber != null) {
+        // ONLINE order created → payment screen
+        context.push(
+          RouteNames.payment,
           extra: {
             'order_number': next.orderNumber,
+            'amount': next.orderTotal,
           },
         );
       } else if (next.status == CheckoutStatus.error && next.error != null) {
@@ -168,6 +177,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             onPlaceOrder: () {
               ref.read(checkoutProvider.notifier).placeOrder(
                     couponCode: cart.couponCode,
+                    cartTotal: cart.totalValue,
                   );
             },
           ),

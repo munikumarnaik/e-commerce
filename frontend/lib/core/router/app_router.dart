@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/payment/presentation/screens/payment_failure_screen.dart';
+import '../../features/payment/presentation/screens/payment_screen.dart';
+import '../../features/payment/presentation/screens/payment_success_screen.dart';
 import '../../features/auth/domain/models/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/admin/presentation/screens/admin_create_product_screen.dart';
@@ -225,6 +228,48 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final orderNumber = state.pathParameters['orderNumber']!;
           return OrderDetailScreen(orderNumber: orderNumber);
+        },
+      ),
+
+      // ── Phase 5: Payment ──
+
+      // Payment screen (ONLINE payment gateway)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.payment,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final orderNumber = extra['order_number'] as String? ?? '';
+          final amount = (extra['amount'] as num?)?.toDouble() ?? 0.0;
+          return PaymentScreen(orderNumber: orderNumber, amount: amount);
+        },
+      ),
+
+      // Payment success
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.paymentSuccess,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return PaymentSuccessScreen(
+            orderNumber: extra['order_number'] as String? ?? '',
+            transactionId: extra['transaction_id'] as String?,
+            amount: (extra['amount'] as num?)?.toDouble() ?? 0.0,
+          );
+        },
+      ),
+
+      // Payment failure
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.paymentFailure,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return PaymentFailureScreen(
+            orderNumber: extra['order_number'] as String? ?? '',
+            errorMessage: extra['error'] as String?,
+            amount: (extra['amount'] as num?)?.toDouble() ?? 0.0,
+          );
         },
       ),
     ],
