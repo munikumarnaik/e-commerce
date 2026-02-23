@@ -38,6 +38,10 @@ class RouteNames {
   static const paymentSuccess = '/payment/success';
   static const paymentFailure = '/payment/failure';
 
+  // Reviews
+  static const reviews = '/reviews/:productSlug';
+  static const writeReview = '/reviews/:productSlug/write';
+
   // Admin
   static const admin = '/admin';
   static const adminCreateProduct = '/admin/create-product';

@@ -191,10 +191,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
                       const SizedBox(height: AppDimensions.sm),
 
-                      // Rating
-                      RatingWidget(
-                        rating: product.averageRating,
-                        totalReviews: product.totalReviews,
+                      // Rating — tap to see reviews
+                      GestureDetector(
+                        onTap: () => context.push(
+                          '/reviews/${product.slug}',
+                          extra: {'product_name': product.name},
+                        ),
+                        child: Row(
+                          children: [
+                            RatingWidget(
+                              rating: product.averageRating,
+                              totalReviews: product.totalReviews,
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
                       ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
 
                       const SizedBox(height: AppDimensions.md),

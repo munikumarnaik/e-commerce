@@ -65,6 +65,14 @@ class ApiEndpoints {
   static String uploadProductImage(String slug) => '/products/$slug/images/upload/';
   static String updateProduct(String slug) => '/products/$slug/update/';
 
+  // Reviews
+  static const reviewCreate = '/reviews/';
+  static String reviewList(String productSlug) => '/reviews/$productSlug/';
+  static String reviewSummary(String productSlug) => '/reviews/$productSlug/summary/';
+  static String reviewUpdate(String reviewId) => '/reviews/$reviewId/update/';
+  static String reviewDelete(String reviewId) => '/reviews/$reviewId/delete/';
+  static String reviewHelpful(String reviewId) => '/reviews/$reviewId/helpful/';
+
   // Wishlist
   static const wishlist = '/wishlist/';
   static const wishlistAdd = '/wishlist/add/';

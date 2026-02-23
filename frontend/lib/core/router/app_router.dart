@@ -19,6 +19,8 @@ import '../../features/order/presentation/screens/order_detail_screen.dart';
 import '../../features/order/presentation/screens/order_list_screen.dart';
 import '../../features/order/presentation/screens/order_success_screen.dart';
 import '../../features/order/presentation/screens/order_track_screen.dart';
+import '../../features/reviews/presentation/screens/reviews_list_screen.dart';
+import '../../features/reviews/presentation/screens/write_review_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/product/domain/models/product_filter.dart';
@@ -239,6 +241,32 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final orderNumber = state.pathParameters['orderNumber']!;
           return OrderTrackScreen(orderNumber: orderNumber);
+        },
+      ),
+
+      // ── Phase 7: Reviews ──
+
+      // Reviews list for a product
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/reviews/:productSlug',
+        builder: (context, state) {
+          final slug = state.pathParameters['productSlug']!;
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final productName = extra['product_name'] as String? ?? '';
+          return ReviewsListScreen(productSlug: slug, productName: productName);
+        },
+      ),
+
+      // Write a review
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/reviews/:productSlug/write',
+        builder: (context, state) {
+          final slug = state.pathParameters['productSlug']!;
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final productName = extra['product_name'] as String? ?? '';
+          return WriteReviewScreen(productSlug: slug, productName: productName);
         },
       ),
 

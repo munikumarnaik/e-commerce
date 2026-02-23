@@ -243,14 +243,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         }
 
     def get_reviews_summary(self, obj):
-        # Placeholder — will be populated when reviews are implemented
-        return {
-            '5_star': 0,
-            '4_star': 0,
-            '3_star': 0,
-            '2_star': 0,
-            '1_star': 0,
-        }
+        from apps.reviews.services import get_reviews_summary
+        return get_reviews_summary(obj)
 
 
 # ──────────────────────────────────────────────
