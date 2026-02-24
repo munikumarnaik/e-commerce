@@ -45,6 +45,7 @@ class RouteNames {
   // Admin
   static const admin = '/admin';
   static const adminCreateProduct = '/admin/create-product';
+  static const adminCoupons = '/admin/coupons';
 
   // Others
   static const wishlist = '/wishlist';

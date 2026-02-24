@@ -43,6 +43,9 @@ class ApiEndpoints {
   static const applyCoupon = '/cart/apply-coupon/';
   static const removeCoupon = '/cart/remove-coupon/';
 
+  // Coupons (public)
+  static const availableCoupons = '/coupons/available/';
+
   // Orders
   static const orders = '/orders/';
   static const orderCreate = '/orders/create/';
@@ -62,8 +65,16 @@ class ApiEndpoints {
   // Admin Product Management
   static const createProduct = '/products/create/';
   static const categoryCreate = '/categories/create/';
+  static const brandCreate = '/brands/create/';
   static String uploadProductImage(String slug) => '/products/$slug/images/upload/';
   static String updateProduct(String slug) => '/products/$slug/update/';
+
+  // Admin Coupon Management
+  static const adminCoupons = '/admin/coupons/';
+  static const adminCouponCreate = '/admin/coupons/create/';
+  static String adminCouponUpdate(String id) => '/admin/coupons/$id/update/';
+  static String adminCouponDelete(String id) => '/admin/coupons/$id/delete/';
+  static String adminCouponToggle(String id) => '/admin/coupons/$id/toggle/';
 
   // Reviews
   static const reviewCreate = '/reviews/';

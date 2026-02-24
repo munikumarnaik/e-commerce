@@ -27,6 +27,11 @@ class Coupon(models.Model):
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()
 
+    # Product association — blank = applies to all products
+    applicable_products = models.ManyToManyField(
+        'products.Product', blank=True, related_name='coupons',
+    )
+
     # Stats
     usage_count = models.PositiveIntegerField(default=0)
 

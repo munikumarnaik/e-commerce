@@ -16,8 +16,74 @@ class CouponSerializer(serializers.ModelSerializer):
         ]
 
 
+class PublicCouponSerializer(serializers.ModelSerializer):
+    applicable_products = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Coupon
+        fields = [
+            'id', 'code', 'discount_type', 'discount_value',
+            'max_discount', 'min_order_value',
+            'valid_from', 'valid_until', 'applicable_products',
+        ]
+
+    def get_applicable_products(self, obj):
+        return [str(p.id) for p in obj.applicable_products.all()]
+
+
 class ApplyCouponSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(max_length=50)
+
+
+class AdminCouponSerializer(serializers.ModelSerializer):
+    is_valid = serializers.BooleanField(read_only=True)
+    applicable_products = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Coupon
+        fields = [
+            'id', 'code', 'discount_type', 'discount_value',
+            'max_discount', 'min_order_value', 'max_usage', 'usage_per_user',
+            'usage_count', 'valid_from', 'valid_until',
+            'is_active', 'is_valid', 'applicable_products', 'created_at',
+        ]
+
+    def get_applicable_products(self, obj):
+        return [
+            {'id': str(p.id), 'name': p.name, 'slug': p.slug}
+            for p in obj.applicable_products.all()
+        ]
+
+
+class AdminCouponCreateSerializer(serializers.ModelSerializer):
+    product_ids = serializers.ListField(
+        child=serializers.UUIDField(), required=False, write_only=True,
+    )
+
+    class Meta:
+        model = Coupon
+        fields = [
+            'code', 'discount_type', 'discount_value',
+            'max_discount', 'min_order_value', 'max_usage', 'usage_per_user',
+            'valid_from', 'valid_until', 'is_active', 'product_ids',
+        ]
+
+    def validate_code(self, value):
+        return value.upper().strip()
+
+    def create(self, validated_data):
+        product_ids = validated_data.pop('product_ids', [])
+        coupon = super().create(validated_data)
+        if product_ids:
+            coupon.applicable_products.set(product_ids)
+        return coupon
+
+    def update(self, instance, validated_data):
+        product_ids = validated_data.pop('product_ids', None)
+        coupon = super().update(instance, validated_data)
+        if product_ids is not None:
+            coupon.applicable_products.set(product_ids)
+        return coupon
 
 
 # ──────────────────────────────────────────────

@@ -5,11 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.shortcuts import get_object_or_404
+
 from apps.core.permissions import IsAdmin, IsVendor
 from apps.orders import services
-from apps.orders.models import Order
+from apps.orders.models import Coupon, Order
 
 from .serializers import (
+    AdminCouponCreateSerializer,
+    AdminCouponSerializer,
     AdminOrderListSerializer,
     AdminUpdateOrderStatusSerializer,
     CancelOrderSerializer,
@@ -17,6 +21,7 @@ from .serializers import (
     OrderDetailSerializer,
     OrderListSerializer,
     OrderTrackSerializer,
+    PublicCouponSerializer,
     VendorOrderItemSerializer,
 )
 
@@ -168,6 +173,47 @@ class OrderTrackView(APIView):
 
 
 # ──────────────────────────────────────────────
+# Public Coupon Views
+# ──────────────────────────────────────────────
+class AvailableCouponsView(APIView):
+    """GET /coupons/available/ — List active coupons visible to users.
+    Optional query: ?product_id=<uuid> to filter coupons for a specific product.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        from django.utils import timezone
+        now = timezone.now()
+
+        coupons = Coupon.objects.filter(
+            is_active=True,
+            valid_from__lte=now,
+            valid_until__gte=now,
+        ).prefetch_related('applicable_products')
+
+        # Exclude fully used coupons
+        coupons = [c for c in coupons if c.is_valid]
+
+        # Filter by product if specified
+        product_id = request.query_params.get('product_id')
+        if product_id:
+            coupons = [
+                c for c in coupons
+                if not c.applicable_products.exists()
+                or c.applicable_products.filter(id=product_id).exists()
+            ]
+
+        serializer = PublicCouponSerializer(coupons, many=True)
+        return Response({
+            'success': True,
+            'data': {
+                'count': len(coupons),
+                'results': serializer.data,
+            },
+        })
+
+
+# ──────────────────────────────────────────────
 # Admin Views
 # ──────────────────────────────────────────────
 class AdminOrderListView(APIView):
@@ -274,6 +320,88 @@ class AdminDashboardStatsView(APIView):
         return Response({
             'success': True,
             'data': stats,
+        })
+
+
+# ──────────────────────────────────────────────
+# Admin Coupon Views
+# ──────────────────────────────────────────────
+class AdminCouponListView(APIView):
+    """GET /admin/coupons/ — List all coupons."""
+    permission_classes = [IsAdmin]
+
+    def get(self, request, *args, **kwargs):
+        coupons = Coupon.objects.all().order_by('-created_at')
+        # Filter by active status
+        is_active = request.query_params.get('is_active')
+        if is_active is not None:
+            coupons = coupons.filter(is_active=is_active.lower() == 'true')
+        serializer = AdminCouponSerializer(coupons, many=True)
+        return Response({
+            'success': True,
+            'data': {
+                'count': coupons.count(),
+                'results': serializer.data,
+            },
+        })
+
+
+class AdminCouponCreateView(APIView):
+    """POST /admin/coupons/create/ — Create a coupon."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request, *args, **kwargs):
+        serializer = AdminCouponCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        coupon = serializer.save()
+        return Response({
+            'success': True,
+            'data': AdminCouponSerializer(coupon).data,
+            'message': 'Coupon created successfully.',
+        }, status=status.HTTP_201_CREATED)
+
+
+class AdminCouponUpdateView(APIView):
+    """PATCH /admin/coupons/{coupon_id}/update/ — Update a coupon."""
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, *args, **kwargs):
+        coupon = get_object_or_404(Coupon, id=kwargs['coupon_id'])
+        serializer = AdminCouponCreateSerializer(coupon, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        coupon = serializer.save()
+        return Response({
+            'success': True,
+            'data': AdminCouponSerializer(coupon).data,
+            'message': 'Coupon updated successfully.',
+        })
+
+
+class AdminCouponDeleteView(APIView):
+    """DELETE /admin/coupons/{coupon_id}/delete/ — Delete a coupon."""
+    permission_classes = [IsAdmin]
+
+    def delete(self, request, *args, **kwargs):
+        coupon = get_object_or_404(Coupon, id=kwargs['coupon_id'])
+        coupon.delete()
+        return Response({
+            'success': True,
+            'message': 'Coupon deleted successfully.',
+        }, status=status.HTTP_200_OK)
+
+
+class AdminCouponToggleView(APIView):
+    """POST /admin/coupons/{coupon_id}/toggle/ — Toggle active status."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request, *args, **kwargs):
+        coupon = get_object_or_404(Coupon, id=kwargs['coupon_id'])
+        coupon.is_active = not coupon.is_active
+        coupon.save(update_fields=['is_active', 'updated_at'])
+        return Response({
+            'success': True,
+            'data': AdminCouponSerializer(coupon).data,
+            'message': f'Coupon {"activated" if coupon.is_active else "deactivated"} successfully.',
         })
 
 

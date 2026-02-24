@@ -9,6 +9,8 @@ import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/cart_item_card.dart';
+import '../../../../shared/providers/available_coupons_provider.dart';
+import '../../../../shared/widgets/available_coupons_banner.dart';
 import '../widgets/coupon_input.dart';
 import '../widgets/price_breakdown.dart';
 
@@ -162,6 +164,10 @@ class CartScreen extends ConsumerWidget {
 
                 const SizedBox(height: AppDimensions.lg),
 
+                // Available coupons banner
+                if (!cartState.cart.hasCoupon)
+                  _buildAvailableCoupons(ref, context),
+
                 // Coupon input
                 CouponInput(
                   appliedCoupon: cartState.cart.couponCode,
@@ -196,6 +202,26 @@ class CartScreen extends ConsumerWidget {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildAvailableCoupons(WidgetRef ref, BuildContext context) {
+    final couponsAsync = ref.watch(availableCouponsProvider);
+
+    return couponsAsync.when(
+      data: (coupons) => coupons.isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(bottom: AppDimensions.md),
+              child: AvailableCouponsBanner(
+                coupons: coupons,
+                onApply: (code) {
+                  ref.read(cartProvider.notifier).applyCoupon(code);
+                },
+              ),
+            ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 

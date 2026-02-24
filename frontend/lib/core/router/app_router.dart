@@ -6,6 +6,7 @@ import '../../features/payment/presentation/screens/payment_screen.dart';
 import '../../features/payment/presentation/screens/payment_success_screen.dart';
 import '../../features/auth/domain/models/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/admin/presentation/screens/admin_coupons_screen.dart';
 import '../../features/admin/presentation/screens/admin_create_product_screen.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/address/presentation/screens/address_list_screen.dart';
@@ -156,6 +157,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RouteNames.adminCreateProduct,
         builder: (context, state) => const AdminCreateProductScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.adminCoupons,
+        builder: (context, state) => const AdminCouponsScreen(),
       ),
 
       // Product detail (full-screen, outside shell)

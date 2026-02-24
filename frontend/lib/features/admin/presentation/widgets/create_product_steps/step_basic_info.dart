@@ -87,16 +87,11 @@ class StepBasicInfo extends ConsumerWidget {
             onChanged: notifier.updateCategory,
           ),
 
-          // Brand — only shown for CLOTHING
+          // Brand — shown for CLOTHING (dropdown + Add Brand button)
           if (!isFood)
-            AdminFormField(
-              label: AppStrings.brand,
-              hint: 'Brand name (optional)',
-              initialValue: formState.brand,
+            _BrandSection(
+              selectedBrandName: formState.brand,
               onChanged: notifier.updateBrand,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s\-&.]')),
-              ],
             ),
         ],
       ),
@@ -208,6 +203,209 @@ class _CategoryDropdown extends ConsumerWidget {
           style: TextStyle(color: Theme.of(context).colorScheme.error),
         ),
       ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Brand section: dropdown + "Add Brand" button
+// ──────────────────────────────────────────────
+class _BrandSection extends ConsumerWidget {
+  final String? selectedBrandName;
+  final ValueChanged<String?> onChanged;
+
+  const _BrandSection({
+    required this.selectedBrandName,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _BrandDropdown(
+            selectedBrandName: selectedBrandName,
+            onChanged: onChanged,
+          ),
+        ),
+        const SizedBox(width: AppDimensions.sm),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: AppDimensions.md),
+          child: Tooltip(
+            message: 'Add new brand',
+            child: FilledButton.tonal(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(48, 52),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+              ),
+              onPressed: () async {
+                final createdName = await showDialog<String>(
+                  context: context,
+                  builder: (_) => const _AddBrandDialog(),
+                );
+                if (createdName != null) {
+                  ref.invalidate(brandsProvider);
+                  onChanged(createdName);
+                }
+              },
+              child: const Icon(Icons.add_rounded),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Brand dropdown
+// ──────────────────────────────────────────────
+class _BrandDropdown extends ConsumerWidget {
+  final String? selectedBrandName;
+  final ValueChanged<String?> onChanged;
+
+  const _BrandDropdown({
+    required this.selectedBrandName,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brandsAsync = ref.watch(brandsProvider);
+
+    return brandsAsync.when(
+      data: (brands) {
+        final validSelected = brands.any((b) => b.name == selectedBrandName)
+            ? selectedBrandName
+            : null;
+
+        return AdminDropdownField<String>(
+          label: AppStrings.brand,
+          value: validSelected,
+          items: brands
+              .map((b) => DropdownMenuItem(value: b.name, child: Text(b.name)))
+              .toList(),
+          onChanged: onChanged,
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.only(bottom: AppDimensions.md),
+        child: LinearProgressIndicator(),
+      ),
+      error: (_, __) => Padding(
+        padding: const EdgeInsets.only(bottom: AppDimensions.md),
+        child: Text(
+          'Failed to load brands',
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Add Brand dialog
+// ──────────────────────────────────────────────
+class _AddBrandDialog extends ConsumerStatefulWidget {
+  const _AddBrandDialog();
+
+  @override
+  ConsumerState<_AddBrandDialog> createState() => _AddBrandDialogState();
+}
+
+class _AddBrandDialogState extends ConsumerState<_AddBrandDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  bool _isLoading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final name = _nameController.text.trim();
+      final repository = ref.read(adminProductRepositoryProvider);
+      await repository.createBrand(name: name);
+      if (mounted) Navigator.pop(context, name);
+    } catch (_) {
+      setState(() {
+        _isLoading = false;
+        _error = 'Failed to create brand. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      title: const Text('Add Brand'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _nameController,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s\-&.]')),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'Brand Name *',
+                hintText: 'e.g. Nike, Zara, H&M',
+              ),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Name is required' : null,
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: AppDimensions.sm),
+              Text(
+                _error!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isLoading ? null : _submit,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Create'),
+        ),
+      ],
     );
   }
 }

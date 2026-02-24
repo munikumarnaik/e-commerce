@@ -12,7 +12,6 @@ import '../../../product/presentation/providers/product_list_provider.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/category_chips_row.dart';
 import '../widgets/category_toggle.dart';
-import '../widgets/featured_products_section.dart';
 import '../widgets/home_greeting.dart';
 import '../widgets/product_grid_section.dart';
 
@@ -124,16 +123,16 @@ class HomeScreen extends ConsumerWidget {
                 ),
 
                 // Featured products
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: AppDimensions.lg),
-                    child: FeaturedProductsSection(
-                      onProductTap: (product) {
-                        context.push('/products/${product.slug}');
-                      },
-                    ),
-                  ),
-                ),
+                // SliverToBoxAdapter(
+                //   child: Padding(
+                //     padding: const EdgeInsets.only(top: AppDimensions.lg),
+                //     child: FeaturedProductsSection(
+                //       onProductTap: (product) {
+                //         context.push('/products/${product.slug}');
+                //       },
+                //     ),
+                //   ),
+                // ),
 
                 // All products grid
                 SliverToBoxAdapter(

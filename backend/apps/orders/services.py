@@ -336,12 +336,15 @@ def get_admin_dashboard_stats():
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     total_orders = Order.objects.count()
+    # Revenue from all completed/delivered orders (COD orders are never marked PAID)
+    completed_statuses = [Order.Status.DELIVERED, 'COMPLETED']
     total_revenue = Order.objects.filter(
-        payment_status=Order.PaymentStatus.PAID,
+        status__in=completed_statuses,
     ).aggregate(total=Sum('total'))['total'] or Decimal('0.00')
 
     pending_orders = Order.objects.filter(status=Order.Status.PENDING).count()
-    completed_orders = Order.objects.filter(status=Order.Status.DELIVERED).count()
+    # Count both DELIVERED and legacy COMPLETED status
+    completed_orders = Order.objects.filter(status__in=completed_statuses).count()
     total_users = User.objects.filter(role=User.Role.CUSTOMER).count()
     total_vendors = User.objects.filter(role=User.Role.VENDOR).count()
 
@@ -349,7 +352,7 @@ def get_admin_dashboard_stats():
     today_orders = Order.objects.filter(created_at__gte=today_start).count()
     today_revenue = Order.objects.filter(
         created_at__gte=today_start,
-        payment_status=Order.PaymentStatus.PAID,
+        status__in=completed_statuses,
     ).aggregate(total=Sum('total'))['total'] or Decimal('0.00')
     new_users_today = User.objects.filter(created_at__gte=today_start).count()
 

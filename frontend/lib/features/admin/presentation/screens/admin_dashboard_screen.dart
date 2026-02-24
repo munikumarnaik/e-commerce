@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/admin_stats_provider.dart';
 import '../widgets/dashboard_add_product_card.dart';
@@ -229,6 +231,15 @@ class _DashboardBody extends ConsumerWidget {
                   const SizedBox(height: 10),
                   DashboardProductsCard(stats: stats),
                   const SizedBox(height: 16),
+
+                  // ── Manage Coupons ──
+                  _ActionButton(
+                    icon: Icons.local_offer_rounded,
+                    label: 'Manage Coupons',
+                    color: const Color(0xFF6366F1),
+                    onTap: () => context.push(RouteNames.adminCoupons),
+                  ),
+                  const SizedBox(height: 10),
 
                   // ── Logout (bottom) ──
                   _ActionButton(

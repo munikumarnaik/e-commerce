@@ -17,6 +17,9 @@ import '../widgets/food_details_section.dart';
 import '../widgets/product_image_carousel.dart';
 import '../widgets/sticky_bottom_bar.dart';
 import '../widgets/variant_selector.dart';
+import '../../../reviews/presentation/widgets/product_reviews_section.dart';
+import '../../../../shared/providers/available_coupons_provider.dart';
+import '../../../../shared/widgets/available_coupons_banner.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -191,26 +194,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
                       const SizedBox(height: AppDimensions.sm),
 
-                      // Rating — tap to see reviews
-                      GestureDetector(
-                        onTap: () => context.push(
-                          '/reviews/${product.slug}',
-                          extra: {'product_name': product.name},
-                        ),
-                        child: Row(
-                          children: [
-                            RatingWidget(
-                              rating: product.averageRating,
-                              totalReviews: product.totalReviews,
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ],
-                        ),
+                      // Rating
+                      RatingWidget(
+                        rating: product.averageRating,
+                        totalReviews: product.totalReviews,
                       ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
 
                       const SizedBox(height: AppDimensions.md),
@@ -233,6 +220,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ],
                   ),
                 ),
+              ),
+
+              // Available coupons
+              SliverToBoxAdapter(
+                child: _buildCouponsBanner(product.id),
               ),
 
               // Variants
@@ -277,6 +269,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   child: _buildVendorInfo(product.vendor!, theme),
                 ),
 
+              // Inline reviews & ratings
+              SliverToBoxAdapter(
+                child: ProductReviewsSection(
+                  productSlug: product.slug,
+                  productName: product.name,
+                ),
+              ),
+
               const SliverToBoxAdapter(
                 child: SizedBox(height: AppDimensions.xxl),
               ),
@@ -320,6 +320,23 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ),
         error: (_, __) => const SizedBox.shrink(),
       ),
+    );
+  }
+
+  Widget _buildCouponsBanner(String productId) {
+    final couponsAsync = ref.watch(productCouponsProvider(productId));
+
+    return couponsAsync.when(
+      data: (coupons) => coupons.isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.md,
+              ),
+              child: AvailableCouponsBanner(coupons: coupons),
+            ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 

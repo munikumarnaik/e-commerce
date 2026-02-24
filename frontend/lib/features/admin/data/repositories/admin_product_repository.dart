@@ -68,6 +68,43 @@ class AdminProductRepository {
     return _extractData(response.data);
   }
 
+  Future<Map<String, dynamic>> createBrand({required String name}) async {
+    final response = await _dio.post(
+      ApiEndpoints.brandCreate,
+      data: {'name': name},
+    );
+    return _extractData(response.data);
+  }
+
+  // ── Coupon Management ──
+
+  Future<Map<String, dynamic>> getCoupons() async {
+    final response = await _dio.get(ApiEndpoints.adminCoupons);
+    return _extractData(response.data);
+  }
+
+  Future<Map<String, dynamic>> createCoupon(Map<String, dynamic> data) async {
+    final response = await _dio.post(ApiEndpoints.adminCouponCreate, data: data);
+    return _extractData(response.data);
+  }
+
+  Future<Map<String, dynamic>> updateCoupon(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _dio.patch(ApiEndpoints.adminCouponUpdate(id), data: data);
+    return _extractData(response.data);
+  }
+
+  Future<void> deleteCoupon(String id) async {
+    await _dio.delete(ApiEndpoints.adminCouponDelete(id));
+  }
+
+  Future<Map<String, dynamic>> toggleCoupon(String id) async {
+    final response = await _dio.post(ApiEndpoints.adminCouponToggle(id));
+    return _extractData(response.data);
+  }
+
   Future<Map<String, dynamic>> getDashboardStats() async {
     final response = await _dio.get(ApiEndpoints.adminDashboardStats);
     return _extractData(response.data);
