@@ -26,6 +26,7 @@ class ApiEndpoints {
   static const featuredProducts = '/products/featured/';
   static String productView(String slug) => '/products/$slug/view/';
   static String productVariants(String slug) => '/products/$slug/variants/';
+  static String productVariantCreate(String slug) => '/products/$slug/variants/create/';
   static const categories = '/categories/';
   static const categoryTree = '/categories/tree/';
   static String categoryDetail(String slug) => '/categories/$slug/';

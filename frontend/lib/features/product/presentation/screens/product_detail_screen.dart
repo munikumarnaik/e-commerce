@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../shared/providers/available_coupons_provider.dart';
+import '../../../../shared/widgets/available_coupons_banner.dart';
 import '../../../../shared/widgets/price_widget.dart';
 import '../../../../shared/widgets/rating_widget.dart';
 import '../../../cart/presentation/providers/cart_provider.dart';
+import '../../../reviews/presentation/widgets/product_reviews_section.dart';
 import '../../domain/models/product_detail_model.dart';
 import '../../domain/models/product_variant_model.dart';
 import '../providers/product_detail_provider.dart';
@@ -17,9 +21,6 @@ import '../widgets/food_details_section.dart';
 import '../widgets/product_image_carousel.dart';
 import '../widgets/sticky_bottom_bar.dart';
 import '../widgets/variant_selector.dart';
-import '../../../reviews/presentation/widgets/product_reviews_section.dart';
-import '../../../../shared/providers/available_coupons_provider.dart';
-import '../../../../shared/widgets/available_coupons_banner.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -264,10 +265,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ),
 
               // Vendor info
-              if (product.vendor != null)
-                SliverToBoxAdapter(
-                  child: _buildVendorInfo(product.vendor!, theme),
-                ),
+              // if (product.vendor != null)
+              //   SliverToBoxAdapter(
+              //     child: _buildVendorInfo(product.vendor!, theme),
+              //   ),
 
               // Inline reviews & ratings
               SliverToBoxAdapter(
@@ -379,8 +380,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
           if (description.length > 150)
             GestureDetector(
-              onTap: () => setState(
-                  () => _descriptionExpanded = !_descriptionExpanded),
+              onTap: () =>
+                  setState(() => _descriptionExpanded = !_descriptionExpanded),
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
@@ -399,53 +400,53 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     );
   }
 
-  Widget _buildVendorInfo(ProductVendor vendor, ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.md),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Text(
-                vendor.name.isNotEmpty ? vendor.name[0].toUpperCase() : 'V',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: AppDimensions.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sold by',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    vendor.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildVendorInfo(ProductVendor vendor, ThemeData theme) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
+  //     child: Container(
+  //       padding: const EdgeInsets.all(AppDimensions.md),
+  //       decoration: BoxDecoration(
+  //         color: theme.colorScheme.surfaceContainerHighest,
+  //         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+  //       ),
+  //       child: Row(
+  //         children: [
+  //           CircleAvatar(
+  //             radius: 20,
+  //             backgroundColor: theme.colorScheme.primaryContainer,
+  //             child: Text(
+  //               vendor.name.isNotEmpty ? vendor.name[0].toUpperCase() : 'V',
+  //               style: theme.textTheme.titleMedium?.copyWith(
+  //                 color: theme.colorScheme.onPrimaryContainer,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ),
+  //           const SizedBox(width: AppDimensions.sm),
+  //           // Expanded(
+  //           //   child: Column(
+  //           //     crossAxisAlignment: CrossAxisAlignment.start,
+  //           //     children: [
+  //           //       Text(
+  //           //         'Sold by',
+  //           //         style: theme.textTheme.labelSmall?.copyWith(
+  //           //           color: theme.colorScheme.onSurfaceVariant,
+  //           //         ),
+  //           //       ),
+  //           //       Text(
+  //           //         vendor.name,
+  //           //         style: theme.textTheme.bodyMedium?.copyWith(
+  //           //           fontWeight: FontWeight.w600,
+  //           //         ),
+  //           //       ),
+  //           //     ],
+  //           //   ),
+  //           // ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Future<void> _addToCart(ProductDetail product) async {
     final messenger = ScaffoldMessenger.of(context);

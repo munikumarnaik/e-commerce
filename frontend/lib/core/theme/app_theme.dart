@@ -43,9 +43,15 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
-        scrolledUnderElevation: 1,
+        centerTitle: false,
+        scrolledUnderElevation: 0.5,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

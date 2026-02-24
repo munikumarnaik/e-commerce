@@ -7,6 +7,7 @@ class ProductFilter {
   double? maxPrice;
   bool? isFeatured;
   String? ordering;
+  int? minRating;
 
   // Food-specific
   String? foodType;
@@ -28,6 +29,7 @@ class ProductFilter {
     this.maxPrice,
     this.isFeatured,
     this.ordering,
+    this.minRating,
     this.foodType,
     this.cuisineType,
     this.gender,
@@ -46,6 +48,7 @@ class ProductFilter {
     double? maxPrice,
     bool? isFeatured,
     String? ordering,
+    int? minRating,
     String? foodType,
     String? cuisineType,
     String? gender,
@@ -63,6 +66,7 @@ class ProductFilter {
       maxPrice: maxPrice ?? this.maxPrice,
       isFeatured: isFeatured ?? this.isFeatured,
       ordering: ordering ?? this.ordering,
+      minRating: minRating ?? this.minRating,
       foodType: foodType ?? this.foodType,
       cuisineType: cuisineType ?? this.cuisineType,
       gender: gender ?? this.gender,
@@ -83,6 +87,7 @@ class ProductFilter {
     if (maxPrice != null) params['max_price'] = maxPrice.toString();
     if (isFeatured != null) params['is_featured'] = isFeatured.toString();
     if (ordering != null) params['ordering'] = ordering;
+    if (minRating != null) params['min_rating'] = minRating.toString();
     if (foodType != null) params['food_type'] = foodType;
     if (cuisineType != null) params['cuisine_type'] = cuisineType;
     if (gender != null) params['gender'] = gender;
@@ -101,6 +106,7 @@ class ProductFilter {
     maxPrice = null;
     isFeatured = null;
     ordering = null;
+    minRating = null;
     foodType = null;
     cuisineType = null;
     gender = null;
@@ -120,5 +126,6 @@ class ProductFilter {
       clothingType != null ||
       minPrice != null ||
       maxPrice != null ||
-      brandId != null;
+      brandId != null ||
+      minRating != null;
 }

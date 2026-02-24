@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../domain/models/product_filter.dart';
+import '../providers/category_provider.dart';
 
-class ClothingFilterContent extends StatefulWidget {
+class ClothingFilterContent extends ConsumerStatefulWidget {
   final ProductFilter filter;
   final ValueChanged<ProductFilter> onFilterChanged;
 
@@ -14,10 +16,11 @@ class ClothingFilterContent extends StatefulWidget {
   });
 
   @override
-  State<ClothingFilterContent> createState() => _ClothingFilterContentState();
+  ConsumerState<ClothingFilterContent> createState() =>
+      _ClothingFilterContentState();
 }
 
-class _ClothingFilterContentState extends State<ClothingFilterContent> {
+class _ClothingFilterContentState extends ConsumerState<ClothingFilterContent> {
   late ProductFilter _filter;
 
   @override
@@ -28,10 +31,62 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
 
   @override
   Widget build(BuildContext context) {
+    final brandsAsync = ref.watch(brandsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Gender
+        // ── Rating ──────────────────────────────────────────
+        _SectionTitle(title: 'Rating'),
+        const SizedBox(height: AppDimensions.sm),
+        Wrap(
+          spacing: AppDimensions.sm,
+          runSpacing: AppDimensions.sm,
+          children: [
+            for (final star in [4, 3, 2, 1])
+              _RatingChip(
+                star: star,
+                isSelected: _filter.minRating == star,
+                onTap: () => _setRating(star),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.lg),
+
+        // ── Brand ───────────────────────────────────────────
+        _SectionTitle(title: AppStrings.brand),
+        const SizedBox(height: AppDimensions.sm),
+        brandsAsync.when(
+          data: (brands) => brands.isEmpty
+              ? Text(
+                  'No brands available',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                )
+              : Wrap(
+                  spacing: AppDimensions.sm,
+                  runSpacing: AppDimensions.sm,
+                  children: [
+                    for (final brand in brands)
+                      _FilterChip(
+                        label: brand.name,
+                        isSelected: _filter.brandId == brand.id,
+                        onTap: () => _setBrand(brand.id),
+                      ),
+                  ],
+                ),
+          loading: () => const SizedBox(
+            height: 36,
+            child: Center(
+                child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+        const SizedBox(height: AppDimensions.lg),
+
+        // ── Gender ──────────────────────────────────────────
         _SectionTitle(title: AppStrings.gender),
         const SizedBox(height: AppDimensions.sm),
         Wrap(
@@ -41,15 +96,14 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
             for (final gender in ['Men', 'Women', 'Unisex', 'Kids'])
               _FilterChip(
                 label: gender,
-                isSelected:
-                    _filter.gender == gender.toUpperCase(),
+                isSelected: _filter.gender == gender.toUpperCase(),
                 onTap: () => _setGender(gender.toUpperCase()),
               ),
           ],
         ),
         const SizedBox(height: AppDimensions.lg),
 
-        // Size
+        // ── Size ────────────────────────────────────────────
         _SectionTitle(title: AppStrings.sizeLabel),
         const SizedBox(height: AppDimensions.sm),
         Wrap(
@@ -66,7 +120,7 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
         ),
         const SizedBox(height: AppDimensions.lg),
 
-        // Color Swatches
+        // ── Color Swatches ──────────────────────────────────
         _SectionTitle(title: AppStrings.colorLabel),
         const SizedBox(height: AppDimensions.sm),
         Wrap(
@@ -84,9 +138,14 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
         ),
         const SizedBox(height: AppDimensions.lg),
 
-        // Price Range
+        // ── Price Range ─────────────────────────────────────
         _SectionTitle(title: AppStrings.priceRange),
         const SizedBox(height: AppDimensions.sm),
+        _PriceRangeRow(
+          minPrice: _filter.minPrice,
+          maxPrice: _filter.maxPrice,
+          maxLimit: 10000,
+        ),
         RangeSlider(
           values: RangeValues(
             _filter.minPrice ?? 0,
@@ -109,7 +168,7 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
         ),
         const SizedBox(height: AppDimensions.lg),
 
-        // Sort By
+        // ── Sort By ─────────────────────────────────────────
         _SectionTitle(title: AppStrings.sortBy),
         const SizedBox(height: AppDimensions.sm),
         Wrap(
@@ -132,7 +191,7 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
               onTap: () => _setOrdering('-price'),
             ),
             _FilterChip(
-              label: 'Popular',
+              label: 'Top Rated',
               isSelected: _filter.ordering == '-average_rating',
               onTap: () => _setOrdering('-average_rating'),
             ),
@@ -154,6 +213,20 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
     'Grey': Color(0xFF9E9E9E),
     'Brown': Color(0xFF795548),
   };
+
+  void _setRating(int star) {
+    setState(() {
+      _filter.minRating = _filter.minRating == star ? null : star;
+    });
+    widget.onFilterChanged(_filter);
+  }
+
+  void _setBrand(String brandId) {
+    setState(() {
+      _filter.brandId = _filter.brandId == brandId ? null : brandId;
+    });
+    widget.onFilterChanged(_filter);
+  }
 
   void _setGender(String gender) {
     setState(() {
@@ -184,6 +257,8 @@ class _ClothingFilterContentState extends State<ClothingFilterContent> {
   }
 }
 
+// ── Shared widgets ────────────────────────────────────────────────────────
+
 class _SectionTitle extends StatelessWidget {
   final String title;
 
@@ -196,6 +271,107 @@ class _SectionTitle extends StatelessWidget {
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
+    );
+  }
+}
+
+class _PriceRangeRow extends StatelessWidget {
+  final double? minPrice;
+  final double? maxPrice;
+  final double maxLimit;
+
+  const _PriceRangeRow({
+    required this.minPrice,
+    required this.maxPrice,
+    required this.maxLimit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final min = (minPrice ?? 0).toInt();
+    final max = (maxPrice ?? maxLimit).toInt();
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '₹$min',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          '₹$max${maxPrice == null ? '+' : ''}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RatingChip extends StatelessWidget {
+  final int star;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _RatingChip({
+    required this.star,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.md,
+          vertical: AppDimensions.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.star_rounded,
+              size: 14,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : const Color(0xFFFBBF24),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$star & above',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

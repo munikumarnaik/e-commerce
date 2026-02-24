@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework import serializers
 
 from apps.products.models import (
@@ -118,6 +120,14 @@ class ProductVariantCreateSerializer(serializers.ModelSerializer):
             'sku', 'size', 'color', 'color_hex',
             'price', 'stock_quantity', 'image_url', 'is_active',
         ]
+        extra_kwargs = {
+            'sku': {'required': False, 'allow_blank': True},
+        }
+
+    def create(self, validated_data):
+        if not validated_data.get('sku'):
+            validated_data['sku'] = uuid.uuid4().hex[:16].upper()
+        return super().create(validated_data)
 
 
 # ──────────────────────────────────────────────
@@ -275,6 +285,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'slug': {'required': False},
+            'sku': {'required': False, 'allow_blank': True},
             'thumbnail': {'required': False, 'allow_null': True, 'allow_blank': True},
         }
 
@@ -310,6 +321,9 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         food_data = validated_data.pop('food_details', None)
         clothing_data = validated_data.pop('clothing_details', None)
         variants_data = validated_data.pop('variants', [])
+
+        if not validated_data.get('sku'):
+            validated_data['sku'] = uuid.uuid4().hex[:16].upper()
 
         product = Product.objects.create(**validated_data)
 

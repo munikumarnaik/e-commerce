@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../data/repositories/admin_product_repository.dart';
 import '../../domain/models/create_product_request.dart';
 import '../../domain/models/product_form_state.dart';
+// VariantEntry is defined in product_form_state.dart
 
 final createProductProvider =
     StateNotifierProvider.autoDispose<CreateProductNotifier, ProductFormState>(
@@ -14,9 +15,11 @@ class CreateProductNotifier extends StateNotifier<ProductFormState> {
 
   CreateProductNotifier(this._repository) : super(const ProductFormState());
 
+  int get _maxStep => state.productType == 'CLOTHING' ? 4 : 3;
+
   // Step navigation
   void nextStep() {
-    if (state.currentStep < 3 && state.validateCurrentStep()) {
+    if (state.currentStep < _maxStep && state.validateCurrentStep()) {
       state = state.copyWith(currentStep: state.currentStep + 1);
     }
   }
@@ -28,7 +31,7 @@ class CreateProductNotifier extends StateNotifier<ProductFormState> {
   }
 
   void goToStep(int step) {
-    if (step >= 0 && step <= 3) {
+    if (step >= 0 && step <= _maxStep) {
       state = state.copyWith(currentStep: step);
     }
   }
@@ -71,6 +74,17 @@ class CreateProductNotifier extends StateNotifier<ProductFormState> {
   void toggleDairy() => state = state.copyWith(containsDairy: !state.containsDairy);
   void toggleNuts() => state = state.copyWith(containsNuts: !state.containsNuts);
 
+  // Step 5: Variants (Clothing only)
+  void addVariant(VariantEntry variant) {
+    state = state.copyWith(variants: [...state.variants, variant]);
+  }
+
+  void removeVariant(int index) {
+    final updated = [...state.variants];
+    updated.removeAt(index);
+    state = state.copyWith(variants: updated);
+  }
+
   // Step 4: Clothing Details
   void updateClothingGender(String? value) => state = state.copyWith(clothingGender: value);
   void updateClothingType(String? value) => state = state.copyWith(clothingType: value);
@@ -88,7 +102,7 @@ class CreateProductNotifier extends StateNotifier<ProductFormState> {
     state = state.copyWith(status: ProductFormStatus.submitting, errorMessage: null);
 
     try {
-      // Phase 1: Create product
+      // Phase 1: Create product (variants included in the same request — no separate calls)
       final request = CreateProductRequest(
         name: state.name,
         description: state.description,
@@ -103,6 +117,9 @@ class CreateProductNotifier extends StateNotifier<ProductFormState> {
         brand: state.brand,
         foodDetails: state.buildFoodDetails(),
         clothingDetails: state.buildClothingDetails(),
+        variants: state.variants.isNotEmpty
+            ? state.variants.map((v) => v.toJson()).toList()
+            : null,
       );
 
       final productData = await _repository.createProduct(request);

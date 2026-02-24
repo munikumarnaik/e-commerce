@@ -23,6 +23,9 @@ class ProductFilter(django_filters.FilterSet):
     cuisine_type = django_filters.CharFilter(field_name='food_details__cuisine_type', lookup_expr='icontains')
     spice_level = django_filters.NumberFilter(field_name='food_details__spice_level')
 
+    # Rating filter
+    min_rating = django_filters.NumberFilter(field_name='average_rating', lookup_expr='gte')
+
     # Clothing-specific filters
     gender = django_filters.CharFilter(field_name='clothing_details__gender')
     size = django_filters.CharFilter(method='filter_by_size')

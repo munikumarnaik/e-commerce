@@ -2,6 +2,36 @@ import 'package:image_picker/image_picker.dart';
 
 enum ProductFormStatus { idle, submitting, uploadingImages, success, error }
 
+class VariantEntry {
+  final String size;
+  final String? color;
+  final String? colorHex;
+  final int stockQuantity;
+  final double? price;
+  final String? sku;
+
+  const VariantEntry({
+    required this.size,
+    this.color,
+    this.colorHex,
+    required this.stockQuantity,
+    this.price,
+    this.sku,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'size': size,
+      'stock_quantity': stockQuantity,
+    };
+    if (color != null && color!.isNotEmpty) map['color'] = color;
+    if (colorHex != null && colorHex!.isNotEmpty) map['color_hex'] = colorHex;
+    if (price != null) map['price'] = price;
+    if (sku != null && sku!.isNotEmpty) map['sku'] = sku;
+    return map;
+  }
+}
+
 class ProductFormState {
   // Step tracking
   final int currentStep;
@@ -49,6 +79,9 @@ class ProductFormState {
   final String? pattern;
   final String? season;
 
+  // Step 5: Variants (Clothing only)
+  final List<VariantEntry> variants;
+
   const ProductFormState({
     this.currentStep = 0,
     this.status = ProductFormStatus.idle,
@@ -84,6 +117,7 @@ class ProductFormState {
     this.fitType,
     this.pattern,
     this.season,
+    this.variants = const [],
   });
 
   ProductFormState copyWith({
@@ -121,6 +155,7 @@ class ProductFormState {
     String? fitType,
     String? pattern,
     String? season,
+    List<VariantEntry>? variants,
   }) {
     return ProductFormState(
       currentStep: currentStep ?? this.currentStep,
@@ -157,6 +192,7 @@ class ProductFormState {
       fitType: fitType ?? this.fitType,
       pattern: pattern ?? this.pattern,
       season: season ?? this.season,
+      variants: variants ?? this.variants,
     );
   }
 
@@ -193,6 +229,8 @@ class ProductFormState {
         return validateStep3();
       case 3:
         return validateStep4();
+      case 4:
+        return variants.isNotEmpty; // at least one variant required for clothing
       default:
         return false;
     }

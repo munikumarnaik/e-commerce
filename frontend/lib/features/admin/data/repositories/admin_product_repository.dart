@@ -43,6 +43,17 @@ class AdminProductRepository {
     return _extractData(response.data);
   }
 
+  Future<Map<String, dynamic>> createVariant(
+    String slug,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _dio.post(
+      ApiEndpoints.productVariantCreate(slug),
+      data: data,
+    );
+    return _extractData(response.data);
+  }
+
   Future<Map<String, dynamic>> updateProduct(
     String slug,
     Map<String, dynamic> data,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -13,12 +15,14 @@ class ProfilePlaceholderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final themeMode = ref.watch(themeModeProvider);
     final theme = Theme.of(context);
 
     final user = authState is AuthAuthenticated ? authState.user : null;
+    final isDark = themeMode == ThemeMode.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Center(child: const Text('Profile'))),
       body: ListView(
         padding: const EdgeInsets.all(AppDimensions.lg),
         children: [
@@ -79,7 +83,50 @@ class ProfilePlaceholderScreen extends ConsumerWidget {
             subtitle: 'Your saved items',
             onTap: () => context.push(RouteNames.wishlist),
           ),
-          const SizedBox(height: AppDimensions.xl),
+          const SizedBox(height: AppDimensions.sm),
+
+          // Dark mode toggle
+          Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: AppDimensions.sm),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              side: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+            child: ListTile(
+              leading: Icon(
+                isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                color: theme.colorScheme.primary,
+              ),
+              title: Text(
+                'Dark Mode',
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                isDark
+                    ? 'Currently using dark theme'
+                    : 'Currently using light theme',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              trailing: Switch(
+                value: isDark,
+                onChanged: (_) {
+                  ref.read(themeModeProvider.notifier).state =
+                      isDark ? ThemeMode.light : ThemeMode.dark;
+                },
+                activeColor: theme.colorScheme.primary,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppDimensions.lg),
 
           // Logout button
           SizedBox(

@@ -10,6 +10,7 @@ class CreateProductRequest {
   final String? brand;
   final Map<String, dynamic>? foodDetails;
   final Map<String, dynamic>? clothingDetails;
+  final List<Map<String, dynamic>>? variants;
 
   const CreateProductRequest({
     required this.name,
@@ -23,6 +24,7 @@ class CreateProductRequest {
     this.brand,
     this.foodDetails,
     this.clothingDetails,
+    this.variants,
   });
 
   Map<String, dynamic> toJson() {
@@ -42,6 +44,7 @@ class CreateProductRequest {
     if (brand != null && brand!.isNotEmpty) map['brand'] = brand;
     if (foodDetails != null) map['food_details'] = foodDetails;
     if (clothingDetails != null) map['clothing_details'] = clothingDetails;
+    if (variants != null && variants!.isNotEmpty) map['variants'] = variants;
 
     return map;
   }

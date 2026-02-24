@@ -11,6 +11,7 @@ import '../widgets/create_product_steps/step_images.dart';
 import '../widgets/create_product_steps/step_indicator.dart';
 import '../widgets/create_product_steps/step_pricing.dart';
 import '../widgets/create_product_steps/step_type_details.dart';
+import '../widgets/create_product_steps/step_variants.dart';
 
 class AdminCreateProductScreen extends ConsumerStatefulWidget {
   const AdminCreateProductScreen({super.key});
@@ -24,13 +25,6 @@ class _AdminCreateProductScreenState
     extends ConsumerState<AdminCreateProductScreen> {
   late final PageController _pageController;
 
-  static const _stepLabels = [
-    AppStrings.basicInfo,
-    AppStrings.pricing,
-    AppStrings.images,
-    AppStrings.typeDetails,
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -43,11 +37,21 @@ class _AdminCreateProductScreenState
     super.dispose();
   }
 
+  List<String> _stepLabels(String productType) => [
+        AppStrings.basicInfo,
+        AppStrings.pricing,
+        AppStrings.images,
+        AppStrings.typeDetails,
+        if (productType == 'CLOTHING') 'Sizes & Variants',
+      ];
+
   @override
   Widget build(BuildContext context) {
     final formState = ref.watch(createProductProvider);
     final notifier = ref.read(createProductProvider.notifier);
     final theme = Theme.of(context);
+    final stepLabels = _stepLabels(formState.productType);
+    final isLastStep = formState.currentStep == stepLabels.length - 1;
 
     // Listen for status changes
     ref.listen<ProductFormState>(createProductProvider, (prev, next) {
@@ -72,14 +76,14 @@ class _AdminCreateProductScreenState
           // Step indicator
           StepIndicator(
             currentStep: formState.currentStep,
-            labels: _stepLabels,
+            labels: stepLabels,
           ),
 
           // Step label
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
             child: Text(
-              '${AppStrings.step} ${formState.currentStep + 1}: ${_stepLabels[formState.currentStep]}',
+              '${AppStrings.step} ${formState.currentStep + 1}: ${stepLabels[formState.currentStep]}',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
@@ -98,6 +102,7 @@ class _AdminCreateProductScreenState
                 StepPricing(),
                 StepImages(),
                 StepTypeDetails(),
+                StepVariants(),
               ],
             ),
           ),
@@ -105,6 +110,7 @@ class _AdminCreateProductScreenState
           // Navigation bar
           _NavigationBar(
             currentStep: formState.currentStep,
+            isLastStep: isLastStep,
             isSubmitting: isSubmitting,
             statusMessage: formState.status == ProductFormStatus.uploadingImages
                 ? AppStrings.uploadingImages
@@ -136,6 +142,7 @@ class _AdminCreateProductScreenState
 
 class _NavigationBar extends StatelessWidget {
   final int currentStep;
+  final bool isLastStep;
   final bool isSubmitting;
   final String? statusMessage;
   final bool canProceed;
@@ -145,6 +152,7 @@ class _NavigationBar extends StatelessWidget {
 
   const _NavigationBar({
     required this.currentStep,
+    required this.isLastStep,
     required this.isSubmitting,
     this.statusMessage,
     required this.canProceed,
@@ -210,11 +218,10 @@ class _NavigationBar extends StatelessWidget {
 
               // Next / Submit button
               Expanded(
-                flex: currentStep == 0 ? 1 : 1,
                 child: FilledButton(
                   onPressed: isSubmitting
                       ? null
-                      : currentStep == 3
+                      : isLastStep
                           ? onSubmit
                           : canProceed
                               ? onNext
@@ -223,7 +230,7 @@ class _NavigationBar extends StatelessWidget {
                     minimumSize: const Size(0, AppDimensions.buttonHeight),
                   ),
                   child: Text(
-                    currentStep == 3 ? AppStrings.submit : AppStrings.next,
+                    isLastStep ? AppStrings.submit : AppStrings.next,
                   ),
                 ),
               ),

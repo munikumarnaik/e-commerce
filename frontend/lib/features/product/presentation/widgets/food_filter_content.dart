@@ -31,7 +31,24 @@ class _FoodFilterContentState extends State<FoodFilterContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Diet Type
+        // ── Rating ──────────────────────────────────────────
+        _SectionTitle(title: 'Rating'),
+        const SizedBox(height: AppDimensions.sm),
+        Wrap(
+          spacing: AppDimensions.sm,
+          runSpacing: AppDimensions.sm,
+          children: [
+            for (final star in [4, 3, 2, 1])
+              _RatingChip(
+                star: star,
+                isSelected: _filter.minRating == star,
+                onTap: () => _setRating(star),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.lg),
+
+        // ── Diet Type ───────────────────────────────────────
         _SectionTitle(title: AppStrings.dietType),
         const SizedBox(height: AppDimensions.sm),
         Wrap(
@@ -62,7 +79,7 @@ class _FoodFilterContentState extends State<FoodFilterContent> {
         ),
         const SizedBox(height: AppDimensions.lg),
 
-        // Cuisine
+        // ── Cuisine ─────────────────────────────────────────
         _SectionTitle(title: AppStrings.cuisine),
         const SizedBox(height: AppDimensions.sm),
         Wrap(
@@ -87,9 +104,14 @@ class _FoodFilterContentState extends State<FoodFilterContent> {
         ),
         const SizedBox(height: AppDimensions.lg),
 
-        // Price Range
+        // ── Price Range ─────────────────────────────────────
         _SectionTitle(title: AppStrings.priceRange),
         const SizedBox(height: AppDimensions.sm),
+        _PriceRangeRow(
+          minPrice: _filter.minPrice,
+          maxPrice: _filter.maxPrice,
+          maxLimit: 5000,
+        ),
         RangeSlider(
           values: RangeValues(
             _filter.minPrice ?? 0,
@@ -112,7 +134,7 @@ class _FoodFilterContentState extends State<FoodFilterContent> {
         ),
         const SizedBox(height: AppDimensions.lg),
 
-        // Sort By
+        // ── Sort By ─────────────────────────────────────────
         _SectionTitle(title: AppStrings.sortBy),
         const SizedBox(height: AppDimensions.sm),
         Wrap(
@@ -135,7 +157,7 @@ class _FoodFilterContentState extends State<FoodFilterContent> {
               onTap: () => _setOrdering('-price'),
             ),
             _FilterChip(
-              label: 'Rating',
+              label: 'Top Rated',
               isSelected: _filter.ordering == '-average_rating',
               onTap: () => _setOrdering('-average_rating'),
             ),
@@ -143,6 +165,13 @@ class _FoodFilterContentState extends State<FoodFilterContent> {
         ),
       ],
     );
+  }
+
+  void _setRating(int star) {
+    setState(() {
+      _filter.minRating = _filter.minRating == star ? null : star;
+    });
+    widget.onFilterChanged(_filter);
   }
 
   void _setFoodType(String type) {
@@ -179,6 +208,107 @@ class _SectionTitle extends StatelessWidget {
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
+    );
+  }
+}
+
+class _PriceRangeRow extends StatelessWidget {
+  final double? minPrice;
+  final double? maxPrice;
+  final double maxLimit;
+
+  const _PriceRangeRow({
+    required this.minPrice,
+    required this.maxPrice,
+    required this.maxLimit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final min = (minPrice ?? 0).toInt();
+    final max = (maxPrice ?? maxLimit).toInt();
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '₹$min',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          '₹$max${maxPrice == null ? '+' : ''}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RatingChip extends StatelessWidget {
+  final int star;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _RatingChip({
+    required this.star,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.md,
+          vertical: AppDimensions.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.star_rounded,
+              size: 14,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : const Color(0xFFFBBF24),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$star & above',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

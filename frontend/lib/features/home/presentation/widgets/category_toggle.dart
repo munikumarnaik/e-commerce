@@ -72,7 +72,9 @@ class _TogglePill extends StatelessWidget {
           vertical: AppDimensions.sm + 2,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           boxShadow: isSelected
               ? [
