@@ -32,9 +32,9 @@ class MainShell extends ConsumerWidget {
             label: 'Home',
           ),
           const NavigationDestination(
-            icon: Icon(Icons.search_rounded),
-            selectedIcon: Icon(Icons.search_rounded),
-            label: 'Search',
+            icon: Icon(Icons.category_outlined),
+            selectedIcon: Icon(Icons.category_rounded),
+            label: 'Categories',
           ),
           NavigationDestination(
             icon: Badge(

@@ -13,6 +13,7 @@ class RouteNames {
 
   // Main shell
   static const home = '/home';
+  static const categories = '/categories';
   static const search = '/search';
   static const cart = '/cart';
   static const profile = '/profile';

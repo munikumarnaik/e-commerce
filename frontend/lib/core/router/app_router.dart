@@ -28,6 +28,7 @@ import '../../features/product/domain/models/product_filter.dart';
 import '../../features/product/presentation/screens/category_listing_screen.dart';
 import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/profile/presentation/screens/profile_placeholder_screen.dart';
+import '../../features/categories/presentation/screens/categories_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/shell/presentation/screens/main_shell.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
@@ -35,7 +36,7 @@ import 'route_names.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-final _searchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'search');
+final _categoriesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'categories');
 final _cartNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'cart');
 final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 
@@ -114,13 +115,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // Search tab
+          // Categories tab
           StatefulShellBranch(
-            navigatorKey: _searchNavigatorKey,
+            navigatorKey: _categoriesNavigatorKey,
             routes: [
               GoRoute(
-                path: RouteNames.search,
-                builder: (context, state) => const SearchScreen(),
+                path: RouteNames.categories,
+                builder: (context, state) => const CategoriesScreen(),
               ),
             ],
           ),
@@ -162,6 +163,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RouteNames.adminCoupons,
         builder: (context, state) => const AdminCouponsScreen(),
+      ),
+
+      // Search (full-screen, outside shell — accessed via home search bar)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.search,
+        builder: (context, state) => const SearchScreen(),
       ),
 
       // Product detail (full-screen, outside shell)
