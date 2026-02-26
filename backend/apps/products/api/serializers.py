@@ -121,12 +121,16 @@ class ProductVariantCreateSerializer(serializers.ModelSerializer):
             'price', 'stock_quantity', 'image_url', 'is_active',
         ]
         extra_kwargs = {
-            'sku': {'required': False, 'allow_blank': True},
+            'sku': {'required': False, 'allow_blank': True, 'validators': []},
         }
 
     def create(self, validated_data):
-        if not validated_data.get('sku'):
-            validated_data['sku'] = uuid.uuid4().hex[:16].upper()
+        sku = validated_data.get('sku') or ''
+        if not sku or ProductVariant.objects.filter(sku=sku).exists():
+            sku = uuid.uuid4().hex[:16].upper()
+            while ProductVariant.objects.filter(sku=sku).exists():
+                sku = uuid.uuid4().hex[:16].upper()
+        validated_data['sku'] = sku
         return super().create(validated_data)
 
 
@@ -285,7 +289,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'slug': {'required': False},
-            'sku': {'required': False, 'allow_blank': True},
+            'sku': {'required': False, 'allow_blank': True, 'validators': []},
             'thumbnail': {'required': False, 'allow_null': True, 'allow_blank': True},
         }
 
@@ -322,8 +326,12 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         clothing_data = validated_data.pop('clothing_details', None)
         variants_data = validated_data.pop('variants', [])
 
-        if not validated_data.get('sku'):
-            validated_data['sku'] = uuid.uuid4().hex[:16].upper()
+        sku = validated_data.get('sku') or ''
+        if not sku or Product.objects.filter(sku=sku).exists():
+            sku = uuid.uuid4().hex[:16].upper()
+            while Product.objects.filter(sku=sku).exists():
+                sku = uuid.uuid4().hex[:16].upper()
+        validated_data['sku'] = sku
 
         product = Product.objects.create(**validated_data)
 
@@ -332,6 +340,12 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         if clothing_data:
             ClothingProduct.objects.create(product=product, **clothing_data)
         for variant_data in variants_data:
+            vsku = variant_data.get('sku') or ''
+            if not vsku or ProductVariant.objects.filter(sku=vsku).exists():
+                vsku = uuid.uuid4().hex[:16].upper()
+                while ProductVariant.objects.filter(sku=vsku).exists():
+                    vsku = uuid.uuid4().hex[:16].upper()
+            variant_data['sku'] = vsku
             ProductVariant.objects.create(product=product, **variant_data)
 
         return product

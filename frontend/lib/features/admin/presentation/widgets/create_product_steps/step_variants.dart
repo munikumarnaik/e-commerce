@@ -124,6 +124,22 @@ class _AddVariantFormState extends State<_AddVariantForm> {
     'Green', 'Yellow', 'Pink', 'Purple', 'Brown',
     'Grey', 'Beige', 'Orange', 'Maroon',
   ];
+  static const _colorHexMap = {
+    'Black':  '#000000',
+    'White':  '#FFFFFF',
+    'Red':    '#F44336',
+    'Blue':   '#2196F3',
+    'Navy':   '#001F5B',
+    'Green':  '#4CAF50',
+    'Yellow': '#FFEB3B',
+    'Pink':   '#E91E8C',
+    'Purple': '#9C27B0',
+    'Brown':  '#795548',
+    'Grey':   '#9E9E9E',
+    'Beige':  '#F5F5DC',
+    'Orange': '#FF9800',
+    'Maroon': '#800000',
+  };
 
   @override
   void dispose() {
@@ -177,7 +193,13 @@ class _AddVariantFormState extends State<_AddVariantForm> {
     final variants = <VariantEntry>[];
     for (final size in _sizes) {
       for (final color in colorList) {
-        variants.add(VariantEntry(size: size, color: color, stockQuantity: stock, price: price));
+        variants.add(VariantEntry(
+          size: size,
+          color: color,
+          colorHex: color != null ? _colorHexMap[color] : null,
+          stockQuantity: stock,
+          price: price,
+        ));
       }
     }
 
