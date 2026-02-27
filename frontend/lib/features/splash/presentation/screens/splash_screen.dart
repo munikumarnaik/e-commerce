@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../../../shared/providers/storage_providers.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -34,6 +37,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final state = ref.read(authProvider);
     if (state is AuthAuthenticated) {
+      // Initialize FCM and register token
+      _initializeFcm();
+
       // Already logged in — go straight to home/admin
       final role = state.user.role;
       if (role == 'ADMIN' || role == 'VENDOR') {
@@ -50,6 +56,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         context.go(RouteNames.login);
       }
     }
+  }
+
+  void _initializeFcm() {
+    if (kIsWeb) return;
+    FCMService.initialize(
+      onTokenReceived: (token) async {
+        ref.read(authProvider.notifier).registerFcmToken(token);
+      },
+      onMessageOpenedApp: (message) {
+        if (mounted) {
+          context.push(RouteNames.notifications);
+        }
+      },
+    );
   }
 
   @override

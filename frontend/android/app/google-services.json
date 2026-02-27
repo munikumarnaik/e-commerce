@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "740965797372",
+    "project_id": "e-commerce-14ca8",
+    "storage_bucket": "e-commerce-14ca8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740965797372:android:358b6dd1e9ef3259a87679",
+        "android_client_info": {
+          "package_name": "com.shopverse.shopverse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpFe3XEQ7RFnV05okyroiK5jJVkCMHFGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

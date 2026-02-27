@@ -107,6 +107,14 @@ class AuthRepository {
     }
   }
 
+  Future<void> updateFcmToken(String token) async {
+    try {
+      await _dio.post(ApiEndpoints.fcmToken, data: {'fcm_token': token});
+    } on DioException {
+      // Best-effort — ignore errors
+    }
+  }
+
   AppException _handleError(DioException e) {
     if (e.error is AppException) {
       return e.error as AppException;

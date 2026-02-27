@@ -23,6 +23,8 @@ import '../../features/order/presentation/screens/order_track_screen.dart';
 import '../../features/reviews/presentation/screens/reviews_list_screen.dart';
 import '../../features/reviews/presentation/screens/write_review_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
+import '../../features/notifications/presentation/screens/notification_list_screen.dart';
+import '../../features/notifications/presentation/screens/notification_settings_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/product/domain/models/product_filter.dart';
 import '../../features/product/presentation/screens/category_listing_screen.dart';
@@ -187,6 +189,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RouteNames.wishlist,
         builder: (context, state) => const WishlistScreen(),
+      ),
+
+      // Notifications (full-screen, outside shell)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.notifications,
+        builder: (context, state) => const NotificationListScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RouteNames.notificationSettings,
+        builder: (context, state) => const NotificationSettingsScreen(),
       ),
 
       // Filtered product listing (full-screen, outside shell)

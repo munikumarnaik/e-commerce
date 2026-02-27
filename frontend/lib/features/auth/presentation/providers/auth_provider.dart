@@ -117,6 +117,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Register FCM token with the backend. Call after login/register.
+  Future<void> registerFcmToken(String token) async {
+    try {
+      await _repository.updateFcmToken(token);
+    } catch (_) {
+      // Best-effort — ignore errors
+    }
+  }
+
   Future<void> logout() async {
     final currentState = state;
     if (currentState is AuthAuthenticated) {

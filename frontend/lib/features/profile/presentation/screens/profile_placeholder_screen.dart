@@ -83,6 +83,12 @@ class ProfilePlaceholderScreen extends ConsumerWidget {
             subtitle: 'Your saved items',
             onTap: () => context.push(RouteNames.wishlist),
           ),
+          _ProfileMenuItem(
+            icon: Icons.notifications_rounded,
+            title: 'Notification Settings',
+            subtitle: 'Manage push & email preferences',
+            onTap: () => context.push(RouteNames.notificationSettings),
+          ),
           const SizedBox(height: AppDimensions.sm),
 
           // Dark mode toggle

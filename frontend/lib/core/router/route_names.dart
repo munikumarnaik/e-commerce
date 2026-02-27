@@ -51,6 +51,7 @@ class RouteNames {
   // Others
   static const wishlist = '/wishlist';
   static const notifications = '/notifications';
+  static const notificationSettings = '/notifications/settings';
   static const profileAddresses = '/profile/addresses';
   static const profileSettings = '/profile/settings';
 }

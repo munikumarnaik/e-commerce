@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/search_bar_shortcut.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../../../product/presentation/providers/product_list_provider.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/category_chips_row.dart';
@@ -71,13 +73,7 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none_rounded),
-                    onPressed: () {},
-                    style: IconButton.styleFrom(
-                      foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  _NotificationBellButton(),
                   const SizedBox(width: 4),
                 ],
               ),
@@ -150,6 +146,30 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _NotificationBellButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final unreadAsync = ref.watch(unreadNotificationCountProvider);
+    final unreadCount = unreadAsync.valueOrNull ?? 0;
+
+    return IconButton(
+      icon: Badge(
+        isLabelVisible: unreadCount > 0,
+        label: Text(
+          unreadCount > 99 ? '99+' : '$unreadCount',
+          style: const TextStyle(fontSize: 10),
+        ),
+        child: const Icon(Icons.notifications_none_rounded),
+      ),
+      onPressed: () => context.push(RouteNames.notifications),
+      style: IconButton.styleFrom(
+        foregroundColor: theme.colorScheme.onSurfaceVariant,
       ),
     );
   }

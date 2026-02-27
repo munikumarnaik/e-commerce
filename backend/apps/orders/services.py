@@ -183,6 +183,10 @@ def create_order(user, shipping_address_id, billing_address_id=None,
         changed_by=user,
     )
 
+    # Send push notification
+    from apps.notifications.tasks import send_order_status_notification
+    send_order_status_notification.delay(str(order.id), 'PENDING')
+
     # Clear the cart
     cart.clear_items()
 
@@ -211,6 +215,10 @@ def cancel_order(user, order_number, reason=''):
         notes=reason or 'Order cancelled by customer.',
         changed_by=user,
     )
+
+    # Send push notification
+    from apps.notifications.tasks import send_order_status_notification
+    send_order_status_notification.delay(str(order.id), 'CANCELLED')
 
     # Restore stock
     for item in order.items.select_related('product', 'variant'):
@@ -280,6 +288,10 @@ def update_order_status(order, new_status, changed_by=None, notes=''):
         changed_by=changed_by,
     )
 
+    # Send push notification
+    from apps.notifications.tasks import send_order_status_notification
+    send_order_status_notification.delay(str(order.id), new_status)
+
     return order
 
 
@@ -323,6 +335,10 @@ def admin_update_order_status(order_id, new_status, changed_by, tracking_number=
         notes=notes,
         changed_by=changed_by,
     )
+
+    # Send push notification
+    from apps.notifications.tasks import send_order_status_notification
+    send_order_status_notification.delay(str(order.id), new_status)
 
     return order
 

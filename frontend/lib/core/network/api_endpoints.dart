@@ -89,4 +89,11 @@ class ApiEndpoints {
   static const wishlist = '/wishlist/';
   static const wishlistAdd = '/wishlist/add/';
   static String wishlistRemove(String productId) => '/wishlist/remove/$productId/';
+
+  // Notifications
+  static const notifications = '/notifications/';
+  static const notificationUnreadCount = '/notifications/unread-count/';
+  static const notificationMarkAllRead = '/notifications/mark-all-read/';
+  static String notificationMarkRead(String id) => '/notifications/$id/read/';
+  static String notificationDelete(String id) => '/notifications/$id/';
 }

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.payments',
     'apps.reviews',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
@@ -203,6 +204,11 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+# ──────────────────────────────────────────────
+# Firebase (FCM Push Notifications)
+# ──────────────────────────────────────────────
+FIREBASE_CREDENTIALS_PATH = config('FIREBASE_CREDENTIALS_PATH', default='')
 
 # ──────────────────────────────────────────────
 # Email
