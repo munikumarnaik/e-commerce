@@ -183,9 +183,12 @@ def create_order(user, shipping_address_id, billing_address_id=None,
         changed_by=user,
     )
 
-    # Send push notification
-    from apps.notifications.tasks import send_order_status_notification
-    send_order_status_notification.delay(str(order.id), 'PENDING')
+    # Send notification (direct call — works without Celery)
+    try:
+        from apps.notifications.services import notify_order_status_change
+        notify_order_status_change(order, 'PENDING')
+    except Exception:
+        pass
 
     # Clear the cart
     cart.clear_items()
@@ -216,9 +219,12 @@ def cancel_order(user, order_number, reason=''):
         changed_by=user,
     )
 
-    # Send push notification
-    from apps.notifications.tasks import send_order_status_notification
-    send_order_status_notification.delay(str(order.id), 'CANCELLED')
+    # Send notification (direct call — works without Celery)
+    try:
+        from apps.notifications.services import notify_order_status_change
+        notify_order_status_change(order, 'CANCELLED')
+    except Exception:
+        pass
 
     # Restore stock
     for item in order.items.select_related('product', 'variant'):
@@ -288,9 +294,12 @@ def update_order_status(order, new_status, changed_by=None, notes=''):
         changed_by=changed_by,
     )
 
-    # Send push notification
-    from apps.notifications.tasks import send_order_status_notification
-    send_order_status_notification.delay(str(order.id), new_status)
+    # Send notification (direct call — works without Celery)
+    try:
+        from apps.notifications.services import notify_order_status_change
+        notify_order_status_change(order, new_status)
+    except Exception:
+        pass
 
     return order
 
@@ -336,9 +345,12 @@ def admin_update_order_status(order_id, new_status, changed_by, tracking_number=
         changed_by=changed_by,
     )
 
-    # Send push notification
-    from apps.notifications.tasks import send_order_status_notification
-    send_order_status_notification.delay(str(order.id), new_status)
+    # Send notification (direct call — works without Celery)
+    try:
+        from apps.notifications.services import notify_order_status_change
+        notify_order_status_change(order, new_status)
+    except Exception:
+        pass
 
     return order
 

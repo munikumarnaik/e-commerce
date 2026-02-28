@@ -97,7 +97,7 @@ def send_password_reset_email(user, token):
         message=message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
-        fail_silently=True,
+        fail_silently=False,
     )
 
 

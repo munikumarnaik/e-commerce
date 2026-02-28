@@ -13,17 +13,20 @@ class NotificationRepository {
   Future<({List<AppNotification> notifications, int unreadCount})>
       getNotifications() async {
     final response = await _dio.get(ApiEndpoints.notifications);
-    final data = response.data as Map<String, dynamic>;
+    final body = response.data as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>? ?? body;
     final results = (data['results'] as List?) ?? [];
     final notifications =
-        results.map((e) => AppNotification.fromJson(e)).toList();
+        results.map((e) => AppNotification.fromJson(e as Map<String, dynamic>)).toList();
     final unreadCount = data['unread_count'] as int? ?? 0;
     return (notifications: notifications, unreadCount: unreadCount);
   }
 
   Future<int> getUnreadCount() async {
     final response = await _dio.get(ApiEndpoints.notificationUnreadCount);
-    return response.data['unread_count'] as int? ?? 0;
+    final body = response.data as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>? ?? body;
+    return data['unread_count'] as int? ?? 0;
   }
 
   Future<void> markAsRead(String notificationId) async {

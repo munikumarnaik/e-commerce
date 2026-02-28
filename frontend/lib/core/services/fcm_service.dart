@@ -1,18 +1,11 @@
 import 'dart:developer';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-/// Top-level background message handler (must be a top-level function)
-@pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  log('Background message: ${message.messageId}');
-}
-
 class FCMService {
-  static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  static bool _initialized = false;
+
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
@@ -23,50 +16,59 @@ class FCMService {
     importance: Importance.max,
   );
 
-  /// Initialize FCM — call after Firebase.initializeApp()
+  /// Initialize FCM — safe to call, wraps everything in try-catch.
   static Future<void> initialize({
     required Future<void> Function(String token) onTokenReceived,
     void Function(RemoteMessage message)? onMessageOpenedApp,
   }) async {
-    // Request permission
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
+    if (_initialized) return;
 
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      log('FCM: User denied notification permission');
-      return;
-    }
+    try {
+      final messaging = FirebaseMessaging.instance;
 
-    // Set up local notifications (for foreground display)
-    await _setupLocalNotifications();
+      // Request permission
+      final settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
 
-    // Get initial FCM token
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await onTokenReceived(token);
-    }
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        log('FCM: User denied notification permission');
+        return;
+      }
 
-    // Listen for token refresh
-    _messaging.onTokenRefresh.listen(onTokenReceived);
+      // Set up local notifications for foreground display
+      await _setupLocalNotifications();
 
-    // Foreground messages — show local notification
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      _showLocalNotification(message);
-    });
+      // Get and register FCM token
+      final token = await messaging.getToken();
+      if (token != null) {
+        await onTokenReceived(token);
+      }
 
-    // When user taps a notification that opened the app
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      onMessageOpenedApp?.call(message);
-    });
+      // Listen for token refresh
+      messaging.onTokenRefresh.listen(onTokenReceived);
 
-    // Check if app was opened from a terminated state via notification
-    final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) {
-      onMessageOpenedApp?.call(initialMessage);
+      // Foreground messages — show a local notification
+      FirebaseMessaging.onMessage.listen(_showLocalNotification);
+
+      // Notification tapped while app was in background
+      FirebaseMessaging.onMessageOpenedApp.listen((message) {
+        onMessageOpenedApp?.call(message);
+      });
+
+      // App launched from terminated state via notification
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) {
+        onMessageOpenedApp?.call(initialMessage);
+      }
+
+      _initialized = true;
+      log('FCM: initialized successfully');
+    } catch (e) {
+      log('FCM: initialization skipped ($e)');
     }
   }
 
@@ -86,7 +88,6 @@ class FCMService {
       ),
     );
 
-    // Create the Android notification channel
     await _localNotifications
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -121,11 +122,8 @@ class FCMService {
 
   /// Delete FCM token (call on logout)
   static Future<void> deleteToken() async {
-    await _messaging.deleteToken();
-  }
-
-  /// Get current FCM token
-  static Future<String?> getToken() async {
-    return _messaging.getToken();
+    try {
+      await FirebaseMessaging.instance.deleteToken();
+    } catch (_) {}
   }
 }
