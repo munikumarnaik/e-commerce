@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -87,19 +88,33 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # ──────────────────────────────────────────────
 # Database – PostgreSQL
 # ──────────────────────────────────────────────
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='ecommerce_db'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 5,
-        },
+DATABASE_URL = config('DATABASE_URL', default='')
+
+if DATABASE_URL:
+    # Production: Render provides DATABASE_URL
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='ecommerce_db'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default='postgres'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+            'OPTIONS': {
+                'connect_timeout': 5,
+            },
+        }
+    }
 
 # ──────────────────────────────────────────────
 # Custom User Model
@@ -277,6 +292,7 @@ if R2_ACCESS_KEY_ID:
 # ──────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 if not R2_ACCESS_KEY_ID:
     MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -297,3 +313,15 @@ PASSWORD_RESET_TOKEN_EXPIRY = 1
 # ──────────────────────────────────────────────
 RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
 RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
+
+# ──────────────────────────────────────────────
+# Production Security (only when DEBUG=False)
+# ──────────────────────────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
