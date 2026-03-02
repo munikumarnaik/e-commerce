@@ -43,7 +43,6 @@ from .serializers import (
 # ──────────────────────────────────────────────
 # Category Views
 # ──────────────────────────────────────────────
-@method_decorator(cache_page(60 * 10), name='dispatch')
 class CategoryListView(generics.ListAPIView):
     """List all active categories. Public endpoint."""
     permission_classes = [AllowAny]
@@ -67,7 +66,6 @@ class CategoryDetailView(generics.RetrieveAPIView):
         return Category.objects.filter(is_active=True).prefetch_related('subcategories')
 
 
-@method_decorator(cache_page(60 * 10), name='dispatch')
 class CategoryTreeView(APIView):
     """Get hierarchical category tree. Public endpoint."""
     permission_classes = [AllowAny]

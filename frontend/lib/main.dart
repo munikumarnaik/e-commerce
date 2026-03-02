@@ -7,10 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'app.dart';
 import 'core/storage/local_storage_service.dart';
 import 'firebase_options.dart';
 import 'shared/providers/storage_providers.dart';
-import 'app.dart';
 
 /// Background message handler — must be a top-level function (Android/iOS only)
 @pragma('vm:entry-point')
