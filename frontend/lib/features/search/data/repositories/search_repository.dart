@@ -58,6 +58,17 @@ class SearchRepository {
     }
   }
 
+  Future<List<String>> getTrendingSearches() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.searchTrending);
+      final data = response.data['data'];
+      final trending = data['trending'] as List? ?? [];
+      return trending.map((e) => e['query'] as String).toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   AppException _handleError(DioException e) {
     if (e.error is AppException) {
       return e.error as AppException;

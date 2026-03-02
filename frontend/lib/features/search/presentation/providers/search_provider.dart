@@ -73,3 +73,9 @@ final searchProvider =
   final repository = ref.watch(searchRepositoryProvider);
   return SearchNotifier(repository);
 });
+
+final trendingSearchesProvider =
+    FutureProvider.autoDispose<List<String>>((ref) {
+  final repository = ref.watch(searchRepositoryProvider);
+  return repository.getTrendingSearches();
+});

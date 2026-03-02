@@ -1,4 +1,10 @@
-from django.db.models import F, Q
+from datetime import timedelta
+
+from django.contrib.postgres.search import SearchQuery as PgSearchQuery, SearchRank, TrigramSimilarity
+from django.db.models import Count, F, Q
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -13,6 +19,7 @@ from apps.products.models import (
     Product,
     ProductImage,
     ProductVariant,
+    SearchQueryLog,
 )
 from apps.products.services import delete_file_from_r2, upload_file_to_r2
 
@@ -36,6 +43,7 @@ from .serializers import (
 # ──────────────────────────────────────────────
 # Category Views
 # ──────────────────────────────────────────────
+@method_decorator(cache_page(60 * 10), name='dispatch')
 class CategoryListView(generics.ListAPIView):
     """List all active categories. Public endpoint."""
     permission_classes = [AllowAny]
@@ -59,6 +67,7 @@ class CategoryDetailView(generics.RetrieveAPIView):
         return Category.objects.filter(is_active=True).prefetch_related('subcategories')
 
 
+@method_decorator(cache_page(60 * 10), name='dispatch')
 class CategoryTreeView(APIView):
     """Get hierarchical category tree. Public endpoint."""
     permission_classes = [AllowAny]
@@ -131,6 +140,7 @@ class BrandCreateView(generics.CreateAPIView):
 # ──────────────────────────────────────────────
 # Product Views
 # ──────────────────────────────────────────────
+@method_decorator(cache_page(60 * 2), name='dispatch')
 class ProductListView(generics.ListAPIView):
     """List products with advanced filtering. Public endpoint."""
     permission_classes = [AllowAny]
@@ -390,10 +400,11 @@ class ProductViewTrackView(APIView):
 
 
 # ──────────────────────────────────────────────
-# Search Endpoint (global)
+# Search Endpoint (global) — PostgreSQL Full-Text Search
 # ──────────────────────────────────────────────
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class SearchView(APIView):
-    """Global search across products, categories, brands. Public endpoint."""
+    """Global search across products, categories, brands with full-text ranking. Public endpoint."""
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
@@ -405,21 +416,24 @@ class SearchView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         search_type = request.query_params.get('type')
-
         result = {'query': query}
 
         if not search_type or search_type == 'products':
-            products = (
+            search_query = PgSearchQuery(query, search_type='websearch')
+            products = list(
                 Product.objects
+                .filter(is_active=True, is_available=True)
                 .filter(
-                    is_active=True, is_available=True,
+                    Q(search_vector=search_query)
+                    | Q(name__icontains=query)
                 )
-                .filter(
-                    Q(name__icontains=query)
-                    | Q(description__icontains=query)
-                    | Q(sku__icontains=query)
+                .annotate(
+                    rank=SearchRank('search_vector', search_query),
+                    similarity=TrigramSimilarity('name', query),
                 )
-                .select_related('category', 'brand')[:20]
+                .order_by('-rank', '-similarity')
+                .select_related('category', 'brand', 'food_details', 'clothing_details')
+                .prefetch_related('images')[:20]
             )
             result['products'] = {
                 'count': len(products),
@@ -444,11 +458,23 @@ class SearchView(APIView):
                 'results': BrandSerializer(brands, many=True).data,
             }
 
+        # Log search query asynchronously
+        product_count = result.get('products', {}).get('count', 0)
+        try:
+            SearchQueryLog.objects.create(
+                query=query,
+                results_count=product_count,
+                user=request.user if request.user.is_authenticated else None,
+            )
+        except Exception:
+            pass
+
         return Response({'success': True, 'data': result})
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class SearchSuggestionsView(APIView):
-    """Search autocomplete suggestions. Public endpoint."""
+    """Search autocomplete suggestions with trigram similarity. Public endpoint."""
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
@@ -461,7 +487,10 @@ class SearchSuggestionsView(APIView):
 
         suggestions = list(
             Product.objects
-            .filter(is_active=True, name__icontains=query)
+            .filter(is_active=True)
+            .filter(Q(name__istartswith=query) | Q(name__icontains=query))
+            .annotate(similarity=TrigramSimilarity('name', query))
+            .order_by('-similarity')
             .values_list('name', flat=True)
             .distinct()[:10]
         )
@@ -469,4 +498,42 @@ class SearchSuggestionsView(APIView):
         return Response({
             'success': True,
             'data': {'suggestions': suggestions},
+        })
+
+
+@method_decorator(cache_page(60 * 15), name='dispatch')
+class TrendingSearchesView(APIView):
+    """Return trending/popular search queries from the last 7 days. Public endpoint."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        days = min(int(request.query_params.get('days', 7)), 30)
+        limit = min(int(request.query_params.get('limit', 10)), 20)
+        since = timezone.now() - timedelta(days=days)
+
+        trending = (
+            SearchQueryLog.objects
+            .filter(created_at__gte=since, results_count__gt=0)
+            .values('query_normalized')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:limit]
+        )
+
+        results = []
+        for entry in trending:
+            original = (
+                SearchQueryLog.objects
+                .filter(query_normalized=entry['query_normalized'])
+                .order_by('-created_at')
+                .values_list('query', flat=True)
+                .first()
+            )
+            results.append({
+                'query': original or entry['query_normalized'],
+                'count': entry['count'],
+            })
+
+        return Response({
+            'success': True,
+            'data': {'trending': results},
         })

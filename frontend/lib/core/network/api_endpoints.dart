@@ -35,6 +35,7 @@ class ApiEndpoints {
   // Search
   static const search = '/search/';
   static const searchSuggestions = '/search/suggestions/';
+  static const searchTrending = '/search/trending/';
 
   // Cart
   static const cart = '/cart/';

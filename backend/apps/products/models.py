@@ -1,6 +1,8 @@
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
@@ -134,6 +136,9 @@ class Product(models.Model):
     is_featured = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
 
+    # Full-text search
+    search_vector = SearchVectorField(null=True, blank=True)
+
     # Audit
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -146,6 +151,7 @@ class Product(models.Model):
             models.Index(fields=['-created_at'], name='idx_products_created_desc'),
             models.Index(fields=['-average_rating'], name='idx_products_rating_desc'),
             models.Index(fields=['price'], name='idx_products_price'),
+            GinIndex(fields=['search_vector'], name='idx_products_search_gin'),
         ]
 
     def __str__(self):
@@ -160,6 +166,15 @@ class Product(models.Model):
                 ((self.compare_at_price - self.price) / self.compare_at_price) * 100, 2,
             )
         super().save(*args, **kwargs)
+        # Update search vector (post-save to ensure PK exists)
+        Product.objects.filter(pk=self.pk).update(
+            search_vector=(
+                SearchVector('name', weight='A')
+                + SearchVector('short_description', weight='B')
+                + SearchVector('description', weight='C')
+                + SearchVector('sku', weight='D')
+            )
+        )
 
     @property
     def has_variants(self):
@@ -327,3 +342,32 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f'Image for {self.product.name} (order: {self.display_order})'
+
+
+# ──────────────────────────────────────────────
+# Search Query Log (for trending searches)
+# ──────────────────────────────────────────────
+class SearchQueryLog(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    query = models.CharField(max_length=255)
+    query_normalized = models.CharField(max_length=255, db_index=True)
+    results_count = models.IntegerField(default=0)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'search_query_logs'
+        indexes = [
+            models.Index(fields=['-created_at'], name='idx_search_log_created'),
+            models.Index(fields=['query_normalized', '-created_at'], name='idx_search_log_norm_date'),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.query_normalized = self.query.strip().lower()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Search: "{self.query}" ({self.results_count} results)'

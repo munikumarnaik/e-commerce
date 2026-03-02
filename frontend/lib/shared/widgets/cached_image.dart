@@ -8,6 +8,8 @@ class CachedImage extends StatelessWidget {
   final double? height;
   final double borderRadius;
   final BoxFit fit;
+  final int? memCacheWidth;
+  final int? memCacheHeight;
 
   const CachedImage({
     super.key,
@@ -16,7 +18,14 @@ class CachedImage extends StatelessWidget {
     this.height,
     this.borderRadius = 0,
     this.fit = BoxFit.cover,
+    this.memCacheWidth,
+    this.memCacheHeight,
   });
+
+  int get _defaultMemCacheWidth {
+    if (width != null && width! <= 200) return 200;
+    return 400;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +40,10 @@ class CachedImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        memCacheWidth: memCacheWidth ?? _defaultMemCacheWidth,
+        memCacheHeight: memCacheHeight,
+        maxWidthDiskCache: 800,
+        maxHeightDiskCache: 800,
         httpHeaders: const {
           'Accept': '*/*',
         },

@@ -35,4 +35,5 @@ urlpatterns = [
     # Search
     path('search/', views.SearchView.as_view(), name='search'),
     path('search/suggestions/', views.SearchSuggestionsView.as_view(), name='search-suggestions'),
+    path('search/trending/', views.TrendingSearchesView.as_view(), name='search-trending'),
 ]

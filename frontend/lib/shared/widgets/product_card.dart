@@ -52,6 +52,7 @@ class ProductCard extends StatelessWidget {
                     width: double.infinity,
                     borderRadius: AppDimensions.radiusMd,
                     fit: BoxFit.cover,
+                    memCacheWidth: 200,
                   ),
                 ),
                 // Wishlist heart

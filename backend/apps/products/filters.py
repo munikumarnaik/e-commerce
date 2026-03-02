@@ -1,4 +1,5 @@
 import django_filters
+from django.contrib.postgres.search import SearchQuery as PgSearchQuery, SearchRank
 from django.db.models import Q
 
 from .models import Product
@@ -38,11 +39,17 @@ class ProductFilter(django_filters.FilterSet):
         fields = []
 
     def filter_search(self, queryset, name, value):
-        return queryset.filter(
-            Q(name__icontains=value)
-            | Q(description__icontains=value)
-            | Q(short_description__icontains=value)
-            | Q(sku__icontains=value)
+        if not value or len(value) < 2:
+            return queryset
+        search_query = PgSearchQuery(value, search_type='websearch')
+        return (
+            queryset
+            .filter(
+                Q(search_vector=search_query)
+                | Q(name__icontains=value)
+            )
+            .annotate(rank=SearchRank('search_vector', search_query))
+            .order_by('-rank')
         )
 
     def filter_by_size(self, queryset, name, value):

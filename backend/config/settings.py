@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
 
     # Third-party
     'rest_framework',
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -183,15 +185,10 @@ SIMPLE_JWT = {
 # ──────────────────────────────────────────────
 CORS_ALLOW_CREDENTIALS = True
 
-if DEBUG:
-    # Allow all origins in development (Flutter web uses random ports)
-    CORS_ALLOW_ALL_ORIGINS = True
-else:
-    CORS_ALLOWED_ORIGINS = config(
-        'CORS_ALLOWED_ORIGINS',
-        default='http://localhost:3000,http://localhost:8080',
-        cast=Csv(),
-    )
+# Allow all origins — this is a REST API for Flutter (mobile + web).
+# Mobile APK: CORS doesn't apply at all (no browser enforcement).
+# Chrome web: CORS_ALLOW_ALL_ORIGINS = True lets any origin through.
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -283,7 +280,7 @@ if R2_ACCESS_KEY_ID:
                 'default_acl': None,
                 'signature_version': 's3v4',
                 'object_parameters': {
-                    'CacheControl': 'max-age=86400',
+                    'CacheControl': 'max-age=604800',
                 },
             },
         },

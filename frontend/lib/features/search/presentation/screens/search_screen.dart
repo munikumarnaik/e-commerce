@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../product/domain/models/product_filter.dart';
 import '../../domain/models/search_state.dart';
 import '../providers/search_provider.dart';
 import '../widgets/recent_searches.dart';
 import '../widgets/search_results_grid.dart';
 import '../widgets/search_suggestions.dart';
+import '../widgets/trending_searches.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -73,14 +76,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildBody(SearchState state, ThemeData theme) {
     return state.when(
-      idle: () => RecentSearches(
-        onSearchTap: (query) {
-          _controller.text = query;
-          _controller.selection = TextSelection.fromPosition(
-            TextPosition(offset: query.length),
-          );
-          _performSearch(query);
-        },
+      idle: () => ListView(
+        children: [
+          RecentSearches(
+            onSearchTap: (query) {
+              _controller.text = query;
+              _controller.selection = TextSelection.fromPosition(
+                TextPosition(offset: query.length),
+              );
+              _performSearch(query);
+            },
+          ),
+          TrendingSearches(
+            onSearchTap: (query) {
+              _controller.text = query;
+              _controller.selection = TextSelection.fromPosition(
+                TextPosition(offset: query.length),
+              );
+              _performSearch(query);
+            },
+          ),
+        ],
       ),
       suggestions: (suggestions) => suggestions.isEmpty
           ? const SizedBox.shrink()
@@ -95,7 +111,42 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               },
             ),
       loading: () => const Center(child: CircularProgressIndicator()),
-      results: (result) => SearchResultsGrid(products: result.products),
+      results: (result) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.md,
+              vertical: AppDimensions.sm,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${result.products.length} results',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.push(
+                    '/filtered-products',
+                    extra: {
+                      'title': 'Search: ${result.query}',
+                      'filter': ProductFilter(search: result.query),
+                    },
+                  ),
+                  icon: const Icon(Icons.tune_rounded, size: 16),
+                  label: const Text('Filter & Sort'),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: SearchResultsGrid(products: result.products),
+          ),
+        ],
+      ),
       noResults: (query) => Center(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.xl),
