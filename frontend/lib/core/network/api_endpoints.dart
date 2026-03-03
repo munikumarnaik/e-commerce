@@ -26,7 +26,8 @@ class ApiEndpoints {
   static const featuredProducts = '/products/featured/';
   static String productView(String slug) => '/products/$slug/view/';
   static String productVariants(String slug) => '/products/$slug/variants/';
-  static String productVariantCreate(String slug) => '/products/$slug/variants/create/';
+  static String productVariantCreate(String slug) =>
+      '/products/$slug/variants/create/';
   static const categories = '/categories/';
   static const categoryTree = '/categories/tree/';
   static String categoryDetail(String slug) => '/categories/$slug/';
@@ -40,7 +41,9 @@ class ApiEndpoints {
   // Cart
   static const cart = '/cart/';
   static const cartAdd = '/cart/add/';
-  static String cartItem(String id) => '/cart/items/$id/';
+  static String cartItem(String id) => '/cart/items/$id/'; // PATCH (update)
+  static String cartItemDelete(String id) =>
+      '/cart/items/$id/delete/'; // DELETE (remove)
   static const cartClear = '/cart/clear/';
   static const applyCoupon = '/cart/apply-coupon/';
   static const removeCoupon = '/cart/remove-coupon/';
@@ -68,7 +71,8 @@ class ApiEndpoints {
   static const createProduct = '/products/create/';
   static const categoryCreate = '/categories/create/';
   static const brandCreate = '/brands/create/';
-  static String uploadProductImage(String slug) => '/products/$slug/images/upload/';
+  static String uploadProductImage(String slug) =>
+      '/products/$slug/images/upload/';
   static String updateProduct(String slug) => '/products/$slug/update/';
 
   // Admin Coupon Management
@@ -81,7 +85,8 @@ class ApiEndpoints {
   // Reviews
   static const reviewCreate = '/reviews/';
   static String reviewList(String productSlug) => '/reviews/$productSlug/';
-  static String reviewSummary(String productSlug) => '/reviews/$productSlug/summary/';
+  static String reviewSummary(String productSlug) =>
+      '/reviews/$productSlug/summary/';
   static String reviewUpdate(String reviewId) => '/reviews/$reviewId/update/';
   static String reviewDelete(String reviewId) => '/reviews/$reviewId/delete/';
   static String reviewHelpful(String reviewId) => '/reviews/$reviewId/helpful/';
@@ -89,7 +94,8 @@ class ApiEndpoints {
   // Wishlist
   static const wishlist = '/wishlist/';
   static const wishlistAdd = '/wishlist/add/';
-  static String wishlistRemove(String productId) => '/wishlist/remove/$productId/';
+  static String wishlistRemove(String productId) =>
+      '/wishlist/remove/$productId/';
 
   // Notifications
   static const notifications = '/notifications/';

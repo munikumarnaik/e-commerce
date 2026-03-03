@@ -56,10 +56,10 @@ class CartRepository {
     }
   }
 
-  /// DELETE /cart/items/{id}/ → backend returns 204 No Content
+  /// DELETE /cart/items/{id}/delete/ → backend returns 204 No Content
   Future<Cart> removeCartItem(String itemId) async {
     try {
-      await _dio.delete(ApiEndpoints.cartItem(itemId));
+      await _dio.delete(ApiEndpoints.cartItemDelete(itemId));
       return getCart();
     } on DioException catch (e) {
       throw _handleError(e);
