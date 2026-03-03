@@ -515,9 +515,12 @@ class _OrderItemTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium,
                 ),
-                if (item.variantName != null)
+                if (item.variantSize != null || item.variantColor != null)
                   Text(
-                    item.variantName!,
+                    [
+                      if (item.variantSize != null && item.variantSize!.isNotEmpty) item.variantSize!,
+                      if (item.variantColor != null && item.variantColor!.isNotEmpty) item.variantColor!,
+                    ].join(' / '),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

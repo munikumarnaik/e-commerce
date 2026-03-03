@@ -15,7 +15,7 @@ class Order with _$Order {
     @JsonKey(name: 'payment_method') @Default('COD') String paymentMethod,
     @Default('0.00') String subtotal,
     @Default('0.00') String tax,
-    @JsonKey(name: 'delivery_fee') @Default('0.00') String deliveryFee,
+    @JsonKey(name: 'shipping_cost') @Default('0.00') String deliveryFee,
     @Default('0.00') String discount,
     @Default('0.00') String total,
     @JsonKey(name: 'coupon_code') String? couponCode,
@@ -55,11 +55,12 @@ class OrderItem with _$OrderItem {
     required String id,
     @JsonKey(name: 'product_name') @Default('') String productName,
     @JsonKey(name: 'product_slug') String? productSlug,
-    @JsonKey(name: 'product_thumbnail') String? productThumbnail,
-    @JsonKey(name: 'variant_name') String? variantName,
+    @JsonKey(name: 'product_image') String? productThumbnail,
+    @JsonKey(name: 'variant_size') String? variantSize,
+    @JsonKey(name: 'variant_color') String? variantColor,
     @Default(1) int quantity,
-    @Default('0.00') String price,
-    @Default('0.00') String total,
+    @JsonKey(name: 'unit_price') @Default('0.00') String price,
+    @JsonKey(name: 'total_price') @Default('0.00') String total,
   }) = _OrderItem;
 
   factory OrderItem.fromJson(Map<String, dynamic> json) =>

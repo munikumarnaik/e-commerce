@@ -30,7 +30,7 @@ mixin _$Order {
   String get paymentMethod => throw _privateConstructorUsedError;
   String get subtotal => throw _privateConstructorUsedError;
   String get tax => throw _privateConstructorUsedError;
-  @JsonKey(name: 'delivery_fee')
+  @JsonKey(name: 'shipping_cost')
   String get deliveryFee => throw _privateConstructorUsedError;
   String get discount => throw _privateConstructorUsedError;
   String get total => throw _privateConstructorUsedError;
@@ -74,7 +74,7 @@ abstract class $OrderCopyWith<$Res> {
       @JsonKey(name: 'payment_method') String paymentMethod,
       String subtotal,
       String tax,
-      @JsonKey(name: 'delivery_fee') String deliveryFee,
+      @JsonKey(name: 'shipping_cost') String deliveryFee,
       String discount,
       String total,
       @JsonKey(name: 'coupon_code') String? couponCode,
@@ -213,7 +213,7 @@ abstract class _$$OrderImplCopyWith<$Res> implements $OrderCopyWith<$Res> {
       @JsonKey(name: 'payment_method') String paymentMethod,
       String subtotal,
       String tax,
-      @JsonKey(name: 'delivery_fee') String deliveryFee,
+      @JsonKey(name: 'shipping_cost') String deliveryFee,
       String discount,
       String total,
       @JsonKey(name: 'coupon_code') String? couponCode,
@@ -346,7 +346,7 @@ class _$OrderImpl extends _Order {
       @JsonKey(name: 'payment_method') this.paymentMethod = 'COD',
       this.subtotal = '0.00',
       this.tax = '0.00',
-      @JsonKey(name: 'delivery_fee') this.deliveryFee = '0.00',
+      @JsonKey(name: 'shipping_cost') this.deliveryFee = '0.00',
       this.discount = '0.00',
       this.total = '0.00',
       @JsonKey(name: 'coupon_code') this.couponCode,
@@ -388,7 +388,7 @@ class _$OrderImpl extends _Order {
   @JsonKey()
   final String tax;
   @override
-  @JsonKey(name: 'delivery_fee')
+  @JsonKey(name: 'shipping_cost')
   final String deliveryFee;
   @override
   @JsonKey()
@@ -532,7 +532,7 @@ abstract class _Order extends Order {
       @JsonKey(name: 'payment_method') final String paymentMethod,
       final String subtotal,
       final String tax,
-      @JsonKey(name: 'delivery_fee') final String deliveryFee,
+      @JsonKey(name: 'shipping_cost') final String deliveryFee,
       final String discount,
       final String total,
       @JsonKey(name: 'coupon_code') final String? couponCode,
@@ -567,7 +567,7 @@ abstract class _Order extends Order {
   @override
   String get tax;
   @override
-  @JsonKey(name: 'delivery_fee')
+  @JsonKey(name: 'shipping_cost')
   String get deliveryFee;
   @override
   String get discount;
@@ -616,12 +616,16 @@ mixin _$OrderItem {
   String get productName => throw _privateConstructorUsedError;
   @JsonKey(name: 'product_slug')
   String? get productSlug => throw _privateConstructorUsedError;
-  @JsonKey(name: 'product_thumbnail')
+  @JsonKey(name: 'product_image')
   String? get productThumbnail => throw _privateConstructorUsedError;
-  @JsonKey(name: 'variant_name')
-  String? get variantName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'variant_size')
+  String? get variantSize => throw _privateConstructorUsedError;
+  @JsonKey(name: 'variant_color')
+  String? get variantColor => throw _privateConstructorUsedError;
   int get quantity => throw _privateConstructorUsedError;
+  @JsonKey(name: 'unit_price')
   String get price => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total_price')
   String get total => throw _privateConstructorUsedError;
 
   /// Serializes this OrderItem to a JSON map.
@@ -643,11 +647,12 @@ abstract class $OrderItemCopyWith<$Res> {
       {String id,
       @JsonKey(name: 'product_name') String productName,
       @JsonKey(name: 'product_slug') String? productSlug,
-      @JsonKey(name: 'product_thumbnail') String? productThumbnail,
-      @JsonKey(name: 'variant_name') String? variantName,
+      @JsonKey(name: 'product_image') String? productThumbnail,
+      @JsonKey(name: 'variant_size') String? variantSize,
+      @JsonKey(name: 'variant_color') String? variantColor,
       int quantity,
-      String price,
-      String total});
+      @JsonKey(name: 'unit_price') String price,
+      @JsonKey(name: 'total_price') String total});
 }
 
 /// @nodoc
@@ -669,7 +674,8 @@ class _$OrderItemCopyWithImpl<$Res, $Val extends OrderItem>
     Object? productName = null,
     Object? productSlug = freezed,
     Object? productThumbnail = freezed,
-    Object? variantName = freezed,
+    Object? variantSize = freezed,
+    Object? variantColor = freezed,
     Object? quantity = null,
     Object? price = null,
     Object? total = null,
@@ -691,9 +697,13 @@ class _$OrderItemCopyWithImpl<$Res, $Val extends OrderItem>
           ? _value.productThumbnail
           : productThumbnail // ignore: cast_nullable_to_non_nullable
               as String?,
-      variantName: freezed == variantName
-          ? _value.variantName
-          : variantName // ignore: cast_nullable_to_non_nullable
+      variantSize: freezed == variantSize
+          ? _value.variantSize
+          : variantSize // ignore: cast_nullable_to_non_nullable
+              as String?,
+      variantColor: freezed == variantColor
+          ? _value.variantColor
+          : variantColor // ignore: cast_nullable_to_non_nullable
               as String?,
       quantity: null == quantity
           ? _value.quantity
@@ -723,11 +733,12 @@ abstract class _$$OrderItemImplCopyWith<$Res>
       {String id,
       @JsonKey(name: 'product_name') String productName,
       @JsonKey(name: 'product_slug') String? productSlug,
-      @JsonKey(name: 'product_thumbnail') String? productThumbnail,
-      @JsonKey(name: 'variant_name') String? variantName,
+      @JsonKey(name: 'product_image') String? productThumbnail,
+      @JsonKey(name: 'variant_size') String? variantSize,
+      @JsonKey(name: 'variant_color') String? variantColor,
       int quantity,
-      String price,
-      String total});
+      @JsonKey(name: 'unit_price') String price,
+      @JsonKey(name: 'total_price') String total});
 }
 
 /// @nodoc
@@ -747,7 +758,8 @@ class __$$OrderItemImplCopyWithImpl<$Res>
     Object? productName = null,
     Object? productSlug = freezed,
     Object? productThumbnail = freezed,
-    Object? variantName = freezed,
+    Object? variantSize = freezed,
+    Object? variantColor = freezed,
     Object? quantity = null,
     Object? price = null,
     Object? total = null,
@@ -769,9 +781,13 @@ class __$$OrderItemImplCopyWithImpl<$Res>
           ? _value.productThumbnail
           : productThumbnail // ignore: cast_nullable_to_non_nullable
               as String?,
-      variantName: freezed == variantName
-          ? _value.variantName
-          : variantName // ignore: cast_nullable_to_non_nullable
+      variantSize: freezed == variantSize
+          ? _value.variantSize
+          : variantSize // ignore: cast_nullable_to_non_nullable
+              as String?,
+      variantColor: freezed == variantColor
+          ? _value.variantColor
+          : variantColor // ignore: cast_nullable_to_non_nullable
               as String?,
       quantity: null == quantity
           ? _value.quantity
@@ -796,11 +812,12 @@ class _$OrderItemImpl implements _OrderItem {
       {required this.id,
       @JsonKey(name: 'product_name') this.productName = '',
       @JsonKey(name: 'product_slug') this.productSlug,
-      @JsonKey(name: 'product_thumbnail') this.productThumbnail,
-      @JsonKey(name: 'variant_name') this.variantName,
+      @JsonKey(name: 'product_image') this.productThumbnail,
+      @JsonKey(name: 'variant_size') this.variantSize,
+      @JsonKey(name: 'variant_color') this.variantColor,
       this.quantity = 1,
-      this.price = '0.00',
-      this.total = '0.00'});
+      @JsonKey(name: 'unit_price') this.price = '0.00',
+      @JsonKey(name: 'total_price') this.total = '0.00'});
 
   factory _$OrderItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$OrderItemImplFromJson(json);
@@ -814,24 +831,27 @@ class _$OrderItemImpl implements _OrderItem {
   @JsonKey(name: 'product_slug')
   final String? productSlug;
   @override
-  @JsonKey(name: 'product_thumbnail')
+  @JsonKey(name: 'product_image')
   final String? productThumbnail;
   @override
-  @JsonKey(name: 'variant_name')
-  final String? variantName;
+  @JsonKey(name: 'variant_size')
+  final String? variantSize;
+  @override
+  @JsonKey(name: 'variant_color')
+  final String? variantColor;
   @override
   @JsonKey()
   final int quantity;
   @override
-  @JsonKey()
+  @JsonKey(name: 'unit_price')
   final String price;
   @override
-  @JsonKey()
+  @JsonKey(name: 'total_price')
   final String total;
 
   @override
   String toString() {
-    return 'OrderItem(id: $id, productName: $productName, productSlug: $productSlug, productThumbnail: $productThumbnail, variantName: $variantName, quantity: $quantity, price: $price, total: $total)';
+    return 'OrderItem(id: $id, productName: $productName, productSlug: $productSlug, productThumbnail: $productThumbnail, variantSize: $variantSize, variantColor: $variantColor, quantity: $quantity, price: $price, total: $total)';
   }
 
   @override
@@ -846,8 +866,10 @@ class _$OrderItemImpl implements _OrderItem {
                 other.productSlug == productSlug) &&
             (identical(other.productThumbnail, productThumbnail) ||
                 other.productThumbnail == productThumbnail) &&
-            (identical(other.variantName, variantName) ||
-                other.variantName == variantName) &&
+            (identical(other.variantSize, variantSize) ||
+                other.variantSize == variantSize) &&
+            (identical(other.variantColor, variantColor) ||
+                other.variantColor == variantColor) &&
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
             (identical(other.price, price) || other.price == price) &&
@@ -857,7 +879,7 @@ class _$OrderItemImpl implements _OrderItem {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, productName, productSlug,
-      productThumbnail, variantName, quantity, price, total);
+      productThumbnail, variantSize, variantColor, quantity, price, total);
 
   /// Create a copy of OrderItem
   /// with the given fields replaced by the non-null parameter values.
@@ -880,11 +902,12 @@ abstract class _OrderItem implements OrderItem {
       {required final String id,
       @JsonKey(name: 'product_name') final String productName,
       @JsonKey(name: 'product_slug') final String? productSlug,
-      @JsonKey(name: 'product_thumbnail') final String? productThumbnail,
-      @JsonKey(name: 'variant_name') final String? variantName,
+      @JsonKey(name: 'product_image') final String? productThumbnail,
+      @JsonKey(name: 'variant_size') final String? variantSize,
+      @JsonKey(name: 'variant_color') final String? variantColor,
       final int quantity,
-      final String price,
-      final String total}) = _$OrderItemImpl;
+      @JsonKey(name: 'unit_price') final String price,
+      @JsonKey(name: 'total_price') final String total}) = _$OrderItemImpl;
 
   factory _OrderItem.fromJson(Map<String, dynamic> json) =
       _$OrderItemImpl.fromJson;
@@ -898,16 +921,21 @@ abstract class _OrderItem implements OrderItem {
   @JsonKey(name: 'product_slug')
   String? get productSlug;
   @override
-  @JsonKey(name: 'product_thumbnail')
+  @JsonKey(name: 'product_image')
   String? get productThumbnail;
   @override
-  @JsonKey(name: 'variant_name')
-  String? get variantName;
+  @JsonKey(name: 'variant_size')
+  String? get variantSize;
+  @override
+  @JsonKey(name: 'variant_color')
+  String? get variantColor;
   @override
   int get quantity;
   @override
+  @JsonKey(name: 'unit_price')
   String get price;
   @override
+  @JsonKey(name: 'total_price')
   String get total;
 
   /// Create a copy of OrderItem

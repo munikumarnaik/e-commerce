@@ -14,7 +14,7 @@ _$OrderImpl _$$OrderImplFromJson(Map<String, dynamic> json) => _$OrderImpl(
       paymentMethod: json['payment_method'] as String? ?? 'COD',
       subtotal: json['subtotal'] as String? ?? '0.00',
       tax: json['tax'] as String? ?? '0.00',
-      deliveryFee: json['delivery_fee'] as String? ?? '0.00',
+      deliveryFee: json['shipping_cost'] as String? ?? '0.00',
       discount: json['discount'] as String? ?? '0.00',
       total: json['total'] as String? ?? '0.00',
       couponCode: json['coupon_code'] as String?,
@@ -43,7 +43,7 @@ Map<String, dynamic> _$$OrderImplToJson(_$OrderImpl instance) =>
       'payment_method': instance.paymentMethod,
       'subtotal': instance.subtotal,
       'tax': instance.tax,
-      'delivery_fee': instance.deliveryFee,
+      'shipping_cost': instance.deliveryFee,
       'discount': instance.discount,
       'total': instance.total,
       'coupon_code': instance.couponCode,
@@ -61,11 +61,12 @@ _$OrderItemImpl _$$OrderItemImplFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       productName: json['product_name'] as String? ?? '',
       productSlug: json['product_slug'] as String?,
-      productThumbnail: json['product_thumbnail'] as String?,
-      variantName: json['variant_name'] as String?,
+      productThumbnail: json['product_image'] as String?,
+      variantSize: json['variant_size'] as String?,
+      variantColor: json['variant_color'] as String?,
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-      price: json['price'] as String? ?? '0.00',
-      total: json['total'] as String? ?? '0.00',
+      price: json['unit_price'] as String? ?? '0.00',
+      total: json['total_price'] as String? ?? '0.00',
     );
 
 Map<String, dynamic> _$$OrderItemImplToJson(_$OrderItemImpl instance) =>
@@ -73,11 +74,12 @@ Map<String, dynamic> _$$OrderItemImplToJson(_$OrderItemImpl instance) =>
       'id': instance.id,
       'product_name': instance.productName,
       'product_slug': instance.productSlug,
-      'product_thumbnail': instance.productThumbnail,
-      'variant_name': instance.variantName,
+      'product_image': instance.productThumbnail,
+      'variant_size': instance.variantSize,
+      'variant_color': instance.variantColor,
       'quantity': instance.quantity,
-      'price': instance.price,
-      'total': instance.total,
+      'unit_price': instance.price,
+      'total_price': instance.total,
     };
 
 _$OrderStatusHistoryImpl _$$OrderStatusHistoryImplFromJson(

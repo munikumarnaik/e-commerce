@@ -31,7 +31,11 @@ class OrderListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        orders = Order.objects.filter(user=request.user)
+        # Exclude ONLINE payment orders that haven't been paid yet
+        orders = Order.objects.filter(user=request.user).exclude(
+            payment_method='ONLINE',
+            payment_status__in=['PENDING', 'FAILED'],
+        )
 
         # Filter by status
         order_status = request.query_params.get('status')
