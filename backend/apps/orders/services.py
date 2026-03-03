@@ -190,8 +190,9 @@ def create_order(user, shipping_address_id, billing_address_id=None,
     except Exception:
         pass
 
-    # Clear the cart
-    cart.clear_items()
+    # Clear the cart (online payments clear only after successful verification)
+    if payment_method != 'ONLINE':
+        cart.clear_items()
 
     return order
 

@@ -7,6 +7,7 @@ class StickyBottomBar extends StatelessWidget {
   final bool isLoading;
   final VoidCallback? onAddToCart;
   final VoidCallback? onBuyNow;
+  final String? disabledMessage;
 
   const StickyBottomBar({
     super.key,
@@ -14,6 +15,7 @@ class StickyBottomBar extends StatelessWidget {
     this.isLoading = false,
     this.onAddToCart,
     this.onBuyNow,
+    this.disabledMessage,
   });
 
   @override
@@ -39,54 +41,84 @@ class StickyBottomBar extends StatelessWidget {
         ],
       ),
       child: isAvailable
-          ? Row(
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Add to Cart
-                Expanded(
-                  child: SizedBox(
-                    height: AppDimensions.buttonHeight,
-                    child: OutlinedButton.icon(
-                      onPressed: isLoading ? null : onAddToCart,
-                      icon: isLoading
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: theme.colorScheme.primary,
-                              ),
-                            )
-                          : const Icon(Icons.shopping_cart_outlined, size: 20),
-                      label: Text(
-                        isLoading ? 'Adding...' : AppStrings.addToCart,
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: theme.colorScheme.primary),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                              AppDimensions.buttonRadius),
+                if (disabledMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          disabledMessage!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Row(
+                  children: [
+                    // Add to Cart
+                    Expanded(
+                      child: SizedBox(
+                        height: AppDimensions.buttonHeight,
+                        child: OutlinedButton.icon(
+                          onPressed: isLoading ? null : onAddToCart,
+                          icon: isLoading
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.shopping_cart_outlined, size: 20),
+                          label: Text(
+                            isLoading ? 'Adding...' : AppStrings.addToCart,
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side:
+                                BorderSide(color: theme.colorScheme.primary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  AppDimensions.buttonRadius),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.sm),
-                // Buy Now
-                Expanded(
-                  child: SizedBox(
-                    height: AppDimensions.buttonHeight,
-                    child: FilledButton.icon(
-                      onPressed: isLoading ? null : onBuyNow,
-                      icon: const Icon(Icons.flash_on_rounded, size: 20),
-                      label: const Text(AppStrings.buyNow),
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                              AppDimensions.buttonRadius),
+                    const SizedBox(width: AppDimensions.sm),
+                    // Buy Now
+                    Expanded(
+                      child: SizedBox(
+                        height: AppDimensions.buttonHeight,
+                        child: FilledButton.icon(
+                          onPressed: isLoading ? null : onBuyNow,
+                          icon:
+                              const Icon(Icons.flash_on_rounded, size: 20),
+                          label: const Text(AppStrings.buyNow),
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  AppDimensions.buttonRadius),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             )

@@ -7,6 +7,8 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../cart/presentation/providers/cart_provider.dart';
+import '../../../order/data/repositories/order_repository.dart';
 import '../providers/payment_provider.dart';
 
 /// Payment method option model used in the selection grid.
@@ -112,6 +114,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen>
   void _handlePaymentError(PaymentFailureResponse response) {
     final msg = response.message ?? 'Payment failed. Please try again.';
     ref.read(paymentProvider.notifier).setFailed(msg);
+    // Cancel the order since payment failed — stock will be restored, cart stays intact
+    ref.read(orderRepositoryProvider).cancelOrder(widget.orderNumber);
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
@@ -174,6 +178,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen>
         WidgetsBinding.instance.addPostFrameCallback((_) => _openRazorpay());
       } else if (next.status == PaymentFlowStatus.success) {
         HapticFeedback.heavyImpact();
+        // Refresh cart — backend cleared it after successful payment
+        ref.read(cartProvider.notifier).loadCart();
         context.go(RouteNames.paymentSuccess, extra: {
           'order_number': widget.orderNumber,
           'transaction_id': next.transactionId ?? '',

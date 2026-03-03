@@ -129,9 +129,49 @@ class _PaymentFailureScreenState extends State<PaymentFailureScreen>
                   const Spacer(),
 
                   // ── Actions ──
-                  _RetryButton(
-                    amount: widget.amount,
-                    orderNumber: widget.orderNumber,
+                  // Go to Cart (cart is still intact)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4776E6), Color(0xFF8E54E9)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4776E6)
+                                .withValues(alpha: 0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => context.go(RouteNames.cart),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.shopping_cart_rounded,
+                                  size: 18, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                'Go to Cart',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   )
                       .animate()
                       .fadeIn(delay: 700.ms)
@@ -139,36 +179,10 @@ class _PaymentFailureScreenState extends State<PaymentFailureScreen>
 
                   const SizedBox(height: 12),
 
-                  // View order (still created, just payment failed)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton.icon(
-                      onPressed: () =>
-                          context.go('/orders/${widget.orderNumber}'),
-                      icon: const Icon(Icons.receipt_long_rounded, size: 16),
-                      label: const Text(
-                        'View Order Details',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF9B9BB5),
-                        side: const BorderSide(color: Color(0xFF1A1A2E)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  )
-                      .animate()
-                      .fadeIn(delay: 800.ms),
-
-                  const SizedBox(height: 12),
-
                   TextButton(
                     onPressed: () => context.go(RouteNames.home),
                     child: const Text(
-                      'Back to Home',
+                      'Continue Shopping',
                       style: TextStyle(
                         color: Color(0xFF9B9BB5),
                         fontWeight: FontWeight.w500,
@@ -176,7 +190,7 @@ class _PaymentFailureScreenState extends State<PaymentFailureScreen>
                     ),
                   )
                       .animate()
-                      .fadeIn(delay: 900.ms),
+                      .fadeIn(delay: 800.ms),
 
                   const SizedBox(height: 24),
                 ],
@@ -381,67 +395,3 @@ class _FailureReasonsList extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Retry Button
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _RetryButton extends StatelessWidget {
-  final String orderNumber;
-  final double amount;
-
-  const _RetryButton({
-    required this.orderNumber,
-    required this.amount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4776E6), Color(0xFF8E54E9)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF4776E6).withValues(alpha: 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: () => context.go(
-              RouteNames.payment,
-              extra: {
-                'order_number': orderNumber,
-                'amount': amount,
-              },
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
-                SizedBox(width: 8),
-                Text(
-                  'Retry Payment',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

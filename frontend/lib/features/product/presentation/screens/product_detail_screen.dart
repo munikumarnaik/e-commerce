@@ -286,12 +286,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ),
 
         // Sticky bottom bar
-        StickyBottomBar(
-          isAvailable: product.isAvailable && product.stockQuantity > 0,
-          isLoading: isAddingToCart,
-          onAddToCart: () => _addToCart(product),
-          onBuyNow: () => _buyNow(product),
-        ),
+        Builder(builder: (context) {
+          final needsVariant = product.hasVariants && _selectedVariant == null;
+          return StickyBottomBar(
+            isAvailable: product.isAvailable && product.stockQuantity > 0,
+            isLoading: isAddingToCart,
+            onAddToCart: needsVariant ? null : () => _addToCart(product),
+            onBuyNow: needsVariant ? null : () => _buyNow(product),
+            disabledMessage:
+                needsVariant ? 'Please select size & color first' : null,
+          );
+        }),
       ],
     );
   }
