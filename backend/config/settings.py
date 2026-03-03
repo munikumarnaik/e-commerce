@@ -268,39 +268,30 @@ R2_REGION = config('R2_REGION', default='auto')
 R2_CUSTOM_DOMAIN = config('R2_CUSTOM_DOMAIN', default='')
 
 if R2_ACCESS_KEY_ID:
-    # boto3 expects just the hostname (no https:// prefix) for custom_domain
-    _r2_custom_domain_host = R2_CUSTOM_DOMAIN.replace('https://', '').replace('http://', '').rstrip('/')
-
-    _storage_options = {
-        'access_key': R2_ACCESS_KEY_ID,
-        'secret_key': R2_SECRET_ACCESS_KEY,
-        'bucket_name': R2_BUCKET_NAME,
-        'endpoint_url': R2_ENDPOINT,
-        'region_name': R2_REGION,
-        'default_acl': None,
-        'signature_version': 's3v4',
-        'object_parameters': {
-            'CacheControl': 'max-age=604800',
-        },
-    }
-
-    if _r2_custom_domain_host:
-        # When custom_domain is set, boto3 serves files via the public domain
-        # (no presigned signature needed → no 400 Bad Request)
-        _storage_options['custom_domain'] = _r2_custom_domain_host
-        MEDIA_URL = f'https://{_r2_custom_domain_host}/'
-    else:
-        MEDIA_URL = f'{R2_ENDPOINT}/{R2_BUCKET_NAME}/'
-
     STORAGES = {
         'default': {
             'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
-            'OPTIONS': _storage_options,
+            'OPTIONS': {
+                'access_key': R2_ACCESS_KEY_ID,
+                'secret_key': R2_SECRET_ACCESS_KEY,
+                'bucket_name': R2_BUCKET_NAME,
+                'endpoint_url': R2_ENDPOINT,
+                'region_name': R2_REGION,
+                'default_acl': None,
+                'signature_version': 's3v4',
+                'object_parameters': {
+                    'CacheControl': 'max-age=604800',
+                },
+            },
         },
         'staticfiles': {
             'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
         },
     }
+    if R2_CUSTOM_DOMAIN:
+        MEDIA_URL = f'https://{R2_CUSTOM_DOMAIN}/'
+    else:
+        MEDIA_URL = f'{R2_ENDPOINT}/{R2_BUCKET_NAME}/'
 
 # ──────────────────────────────────────────────
 # Static & Media
