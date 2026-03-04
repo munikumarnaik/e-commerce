@@ -70,7 +70,6 @@ class _FilteredProductListingScreenState
           ? _activeFilter.foodType
           : _baseFilter.foodType,
     );
-    // Re-copy all active filters except the cleared one
     f.minRating = key == 'rating' ? null : _activeFilter.minRating;
     f.brandId = key == 'brand' ? null : _activeFilter.brandId;
     f.gender = key == 'gender' ? null : _activeFilter.gender;
@@ -93,6 +92,21 @@ class _FilteredProductListingScreenState
     _applyFilter(f);
   }
 
+  int get _activeFilterCount {
+    int count = 0;
+    if (_activeFilter.minRating != null) count++;
+    if (_activeFilter.brandId != null) count++;
+    if (_activeFilter.gender != null) count++;
+    if (_activeFilter.size != null) count++;
+    if (_activeFilter.color != null) count++;
+    if (_activeFilter.minPrice != null || _activeFilter.maxPrice != null) count++;
+    if (_activeFilter.foodType != null &&
+        _activeFilter.foodType != _baseFilter.foodType) { count++; }
+    if (_activeFilter.cuisineType != null) count++;
+    if (_activeFilter.ordering != null) count++;
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(_provider);
@@ -103,18 +117,27 @@ class _FilteredProductListingScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          Badge(
+            isLabelVisible: _activeFilterCount > 0,
+            label: Text('$_activeFilterCount'),
+            child: IconButton(
+              icon: const Icon(Icons.tune_rounded),
+              tooltip: 'Filter',
+              onPressed: () => _showFilterSheet(context, isFood),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: Column(
         children: [
-          // ── Visible sort + filter bar ────────────────────
-          _SortFilterBar(
+          // ── Active filter chips (only shown when filters are applied) ──
+          _ActiveFiltersRow(
             filter: _activeFilter,
             baseFilter: _baseFilter,
-            onSortTap: () => _showSortSheet(context),
-            onFilterTap: () => _showFilterSheet(context, isFood),
             onClearFilter: _clearOneFilter,
           ),
-          const Divider(height: 1),
 
           // ── Product list ─────────────────────────────────
           Expanded(
@@ -181,8 +204,8 @@ class _FilteredProductListingScreenState
                 Icon(
                   Icons.inventory_2_outlined,
                   size: 56,
-                  color:
-                      theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  color: theme.colorScheme.onSurfaceVariant
+                      .withValues(alpha: 0.4),
                 ),
                 const SizedBox(height: AppDimensions.md),
                 Text(
@@ -259,28 +282,6 @@ class _FilteredProductListingScreenState
     }
   }
 
-  void _showSortSheet(BuildContext context) async {
-    final result =
-        await _SortSheet.show(context, _activeFilter.ordering);
-    if (result != null) {
-      final updated = ProductFilter(
-        categoryType: _activeFilter.categoryType,
-        clothingType: _activeFilter.clothingType,
-        foodType: _activeFilter.foodType,
-        brandId: _activeFilter.brandId,
-        gender: _activeFilter.gender,
-        size: _activeFilter.size,
-        color: _activeFilter.color,
-        minPrice: _activeFilter.minPrice,
-        maxPrice: _activeFilter.maxPrice,
-        minRating: _activeFilter.minRating,
-        cuisineType: _activeFilter.cuisineType,
-        ordering: result.isEmpty ? null : result,
-      );
-      _applyFilter(updated);
-    }
-  }
-
   void _showFilterSheet(BuildContext context, bool isFood) async {
     final result = await FilterBottomSheet.show(
       context,
@@ -288,7 +289,6 @@ class _FilteredProductListingScreenState
       isFood: isFood,
     );
     if (result != null) {
-      // Always preserve the base chip filter context
       result.categoryType = _baseFilter.categoryType;
       result.clothingType = _baseFilter.clothingType;
       if (_baseFilter.foodType != null && result.foodType == null) {
@@ -302,108 +302,35 @@ class _FilteredProductListingScreenState
 /// Keep the old class name as an alias for backward compatibility with router
 typedef CategoryListingScreen = FilteredProductListingScreen;
 
-// ─── Sort + Filter bar ────────────────────────────────────────────────────
+// ─── Active Filters Row ───────────────────────────────────────────────────
 
-class _SortFilterBar extends StatelessWidget {
+class _ActiveFiltersRow extends StatelessWidget {
   final ProductFilter filter;
   final ProductFilter baseFilter;
-  final VoidCallback onSortTap;
-  final VoidCallback onFilterTap;
   final void Function(String key) onClearFilter;
 
-  const _SortFilterBar({
+  const _ActiveFiltersRow({
     required this.filter,
     required this.baseFilter,
-    required this.onSortTap,
-    required this.onFilterTap,
     required this.onClearFilter,
   });
 
-  int get _extraFilterCount {
-    int count = 0;
-    if (filter.minRating != null) count++;
-    if (filter.brandId != null) count++;
-    if (filter.gender != null) count++;
-    if (filter.size != null) count++;
-    if (filter.color != null) count++;
-    if (filter.minPrice != null || filter.maxPrice != null) count++;
-    if (filter.foodType != null &&
-        filter.foodType != baseFilter.foodType) {
-      count++;
-    }
-    if (filter.cuisineType != null) count++;
-    return count;
-  }
-
-  String get _sortLabel {
-    switch (filter.ordering) {
-      case 'price':
-        return 'Price ↑';
-      case '-price':
-        return 'Price ↓';
-      case '-created_at':
-        return 'Newest';
-      case '-average_rating':
-        return 'Top Rated';
-      default:
-        return 'Sort';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final activeChips = _buildActiveChips();
-
-    return Container(
-      color: theme.colorScheme.surface,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.md,
-          vertical: 10,
-        ),
-        child: Row(
-          children: [
-            // Sort button
-            _BarChip(
-              label: _sortLabel,
-              icon: Icons.swap_vert_rounded,
-              isActive: filter.ordering != null,
-              onTap: onSortTap,
-              trailing: const Icon(Icons.keyboard_arrow_down_rounded,
-                  size: 16),
-            ),
-            const SizedBox(width: 8),
-
-            // Filter button
-            _BarChip(
-              label: _extraFilterCount > 0
-                  ? 'Filters ($_extraFilterCount)'
-                  : 'Filters',
-              icon: Icons.tune_rounded,
-              isActive: _extraFilterCount > 0,
-              onTap: onFilterTap,
-            ),
-
-            // Active filter quick-chips with ✕
-            if (activeChips.isNotEmpty) ...[
-              Container(
-                height: 20,
-                width: 1,
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                color: theme.colorScheme.outlineVariant,
-              ),
-              ...activeChips,
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildActiveChips() {
+  List<Widget> _buildChips() {
     final chips = <Widget>[];
+
+    if (filter.ordering != null) {
+      final label = switch (filter.ordering) {
+        'price' => 'Price: Low–High',
+        '-price' => 'Price: High–Low',
+        '-created_at' => 'Newest',
+        '-average_rating' => 'Top Rated',
+        _ => filter.ordering!,
+      };
+      chips.add(_ActiveChip(
+        label: label,
+        onRemove: () => onClearFilter('sort'),
+      ));
+    }
     if (filter.minRating != null) {
       chips.add(_ActiveChip(
         label: '${filter.minRating}★+',
@@ -441,8 +368,7 @@ class _SortFilterBar extends StatelessWidget {
         onRemove: () => onClearFilter('price'),
       ));
     }
-    if (filter.foodType != null &&
-        filter.foodType != baseFilter.foodType) {
+    if (filter.foodType != null && filter.foodType != baseFilter.foodType) {
       final label = switch (filter.foodType) {
         'VEG' => 'Veg',
         'NON_VEG' => 'Non-Veg',
@@ -463,77 +389,25 @@ class _SortFilterBar extends StatelessWidget {
     }
     return chips;
   }
-}
-
-class _BarChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isActive;
-  final VoidCallback onTap;
-  final Widget? trailing;
-
-  const _BarChip({
-    required this.label,
-    required this.icon,
-    required this.isActive,
-    required this.onTap,
-    this.trailing,
-  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final chips = _buildChips();
+    if (chips.isEmpty) return const SizedBox.shrink();
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: isActive
-              ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-          border: Border.all(
-            color: isActive
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withValues(alpha: 0.4),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.md,
+            vertical: 8,
           ),
+          child: Row(children: chips),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 15,
-              color: isActive
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: isActive
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
-            if (trailing != null) ...[
-              const SizedBox(width: 2),
-              IconTheme(
-                data: IconThemeData(
-                  color: isActive
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-                child: trailing!,
-              ),
-            ],
-          ],
-        ),
-      ),
+        const Divider(height: 1),
+      ],
     );
   }
 }
@@ -578,85 +452,6 @@ class _ActiveChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── Sort Sheet ───────────────────────────────────────────────────────────
-
-class _SortSheet {
-  static Future<String?> show(BuildContext context, String? current) {
-    return showModalBottomSheet<String>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusXl),
-        ),
-      ),
-      builder: (ctx) => _SortSheetContent(current: current),
-    );
-  }
-}
-
-class _SortSheetContent extends StatelessWidget {
-  final String? current;
-
-  const _SortSheetContent({this.current});
-
-  static const _options = [
-    (label: 'Relevance', value: ''),
-    (label: 'Newest First', value: '-created_at'),
-    (label: 'Price: Low to High', value: 'price'),
-    (label: 'Price: High to Low', value: '-price'),
-    (label: 'Top Rated', value: '-average_rating'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.md),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.lg,
-                AppDimensions.sm,
-                AppDimensions.lg,
-                AppDimensions.md,
-              ),
-              child: Text(
-                'Sort By',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            for (final opt in _options)
-              ListTile(
-                title: Text(opt.label),
-                leading: Radio<String>(
-                  value: opt.value,
-                  groupValue: current ?? '',
-                  onChanged: (v) => Navigator.pop(context, v),
-                ),
-                onTap: () => Navigator.pop(context, opt.value),
-                selected: (current ?? '') == opt.value,
-                selectedTileColor:
-                    theme.colorScheme.primary.withValues(alpha: 0.06),
-                trailing: (current ?? '') == opt.value
-                    ? Icon(Icons.check_rounded,
-                        color: theme.colorScheme.primary, size: 18)
-                    : null,
-              ),
-          ],
-        ),
       ),
     );
   }
