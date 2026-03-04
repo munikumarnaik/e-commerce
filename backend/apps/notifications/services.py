@@ -31,13 +31,21 @@ def _get_firebase_app():
         logger.warning('firebase-admin not installed. Push notifications disabled.')
         return None
 
-    cred_path = getattr(settings, 'FIREBASE_CREDENTIALS_PATH', '')
-    if not cred_path:
-        logger.warning('FIREBASE_CREDENTIALS_PATH not set. Push notifications disabled.')
-        return None
-
     try:
-        cred = credentials.Certificate(cred_path)
+        # Prefer JSON content from env var (for Render / cloud deployments)
+        cred_json = getattr(settings, 'FIREBASE_CREDENTIALS_JSON', '')
+        if cred_json:
+            import json
+            cred_dict = json.loads(cred_json)
+            cred = credentials.Certificate(cred_dict)
+        else:
+            # Fall back to file path (for local development)
+            cred_path = getattr(settings, 'FIREBASE_CREDENTIALS_PATH', '')
+            if not cred_path:
+                logger.warning('Firebase credentials not configured. Push notifications disabled.')
+                return None
+            cred = credentials.Certificate(cred_path)
+
         _firebase_app = firebase_admin.initialize_app(cred)
         return _firebase_app
     except Exception:

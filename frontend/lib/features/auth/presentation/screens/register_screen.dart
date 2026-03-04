@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/custom_button.dart';
@@ -68,6 +70,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     ref.listen<AuthState>(authProvider, (_, next) {
       if (next is AuthAuthenticated) {
+        if (!kIsWeb) {
+          FCMService.initialize(
+            onTokenReceived: (token) async {
+              ref.read(authProvider.notifier).registerFcmToken(token);
+            },
+          );
+        }
         context.go(RouteNames.home);
       } else if (next is AuthError) {
         context.showSnackBar(next.message, isError: true);

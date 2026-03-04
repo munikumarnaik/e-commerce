@@ -236,7 +236,10 @@ CELERY_TIMEZONE = 'UTC'
 # ──────────────────────────────────────────────
 # Firebase (FCM Push Notifications)
 # ──────────────────────────────────────────────
+# On Render: set FIREBASE_CREDENTIALS_JSON to the full JSON file content (single line)
+# Locally: set FIREBASE_CREDENTIALS_PATH to the file path
 FIREBASE_CREDENTIALS_PATH = config('FIREBASE_CREDENTIALS_PATH', default='')
+FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS_JSON', default='')
 
 # ──────────────────────────────────────────────
 # Email
