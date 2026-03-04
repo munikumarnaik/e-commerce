@@ -183,12 +183,13 @@ def create_order(user, shipping_address_id, billing_address_id=None,
         changed_by=user,
     )
 
-    # Send notification (direct call — works without Celery)
-    try:
-        from apps.notifications.services import notify_order_status_change
-        notify_order_status_change(order, 'PENDING')
-    except Exception:
-        pass
+    # Send notification — for ONLINE payment, skip here (sent after payment success)
+    if payment_method != 'ONLINE':
+        try:
+            from apps.notifications.services import notify_order_status_change
+            notify_order_status_change(order, 'PENDING')
+        except Exception:
+            pass
 
     # Clear the cart (online payments clear only after successful verification)
     if payment_method != 'ONLINE':
@@ -198,7 +199,7 @@ def create_order(user, shipping_address_id, billing_address_id=None,
 
 
 @transaction.atomic
-def cancel_order(user, order_number, reason=''):
+def cancel_order(user, order_number, reason='', notify=True):
     """Cancel an order and restore stock."""
     try:
         order = Order.objects.get(order_number=order_number, user=user)
@@ -221,11 +222,12 @@ def cancel_order(user, order_number, reason=''):
     )
 
     # Send notification (direct call — works without Celery)
-    try:
-        from apps.notifications.services import notify_order_status_change
-        notify_order_status_change(order, 'CANCELLED')
-    except Exception:
-        pass
+    if notify:
+        try:
+            from apps.notifications.services import notify_order_status_change
+            notify_order_status_change(order, 'CANCELLED')
+        except Exception:
+            pass
 
     # Restore stock
     for item in order.items.select_related('product', 'variant'):

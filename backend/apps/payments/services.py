@@ -131,6 +131,14 @@ def _mark_order_paid(order, payment):
     order.transaction_id = payment.gateway_payment_id or str(payment.id)
     order.save(update_fields=['payment_status', 'payment_id', 'transaction_id', 'updated_at'])
 
+    # For online payments, send "Order Placed" notification now (payment succeeded)
+    if order.payment_method == 'ONLINE':
+        try:
+            from apps.notifications.services import notify_order_status_change
+            notify_order_status_change(order, 'PENDING')
+        except Exception:
+            pass
+
     # Auto-confirm order on successful payment
     if order.can_transition_to('CONFIRMED'):
         update_order_status(order, 'CONFIRMED', notes='Payment received.')
@@ -201,13 +209,14 @@ def process_webhook(payload, razorpay_signature):
         payment.save(update_fields=[
             'status', 'failure_code', 'failure_description', 'webhook_data', 'updated_at',
         ])
-        # Cancel the order and restore stock
+        # Cancel the order and restore stock (no "Order Cancelled" notification)
         if payment.order.is_cancellable:
             try:
                 cancel_order(
                     user=payment.order.user,
                     order_number=payment.order.order_number,
                     reason='Payment failed — order auto-cancelled.',
+                    notify=False,
                 )
             except Exception:
                 # Fallback: at least mark payment status as FAILED
@@ -216,6 +225,12 @@ def process_webhook(payload, razorpay_signature):
         else:
             payment.order.payment_status = Order.PaymentStatus.FAILED
             payment.order.save(update_fields=['payment_status', 'updated_at'])
+        # Send "Payment Failed" notification (no action URL — cart is restored)
+        try:
+            from apps.notifications.services import notify_payment_failed
+            notify_payment_failed(payment.order)
+        except Exception:
+            pass
 
     elif event in ('refund.created', 'refund.processed'):
         refund_entity = payload.get('payload', {}).get('refund', {}).get('entity', {})

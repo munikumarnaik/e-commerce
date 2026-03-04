@@ -33,8 +33,9 @@ class NotificationListState {
 
 class NotificationListNotifier extends StateNotifier<NotificationListState> {
   final NotificationRepository _repository;
+  final Ref _ref;
 
-  NotificationListNotifier(this._repository)
+  NotificationListNotifier(this._repository, this._ref)
       : super(const NotificationListState());
 
   Future<void> load() async {
@@ -65,6 +66,7 @@ class NotificationListNotifier extends StateNotifier<NotificationListState> {
       }).toList();
       final newUnread = updated.where((n) => !n.isRead).length;
       state = state.copyWith(notifications: updated, unreadCount: newUnread);
+      _ref.invalidate(unreadNotificationCountProvider);
     } catch (_) {}
   }
 
@@ -75,6 +77,7 @@ class NotificationListNotifier extends StateNotifier<NotificationListState> {
           .map((n) => n.copyWith(isRead: true, readAt: DateTime.now()))
           .toList();
       state = state.copyWith(notifications: updated, unreadCount: 0);
+      _ref.invalidate(unreadNotificationCountProvider);
     } catch (_) {}
   }
 
@@ -85,6 +88,7 @@ class NotificationListNotifier extends StateNotifier<NotificationListState> {
           state.notifications.where((n) => n.id != id).toList();
       final newUnread = updated.where((n) => !n.isRead).length;
       state = state.copyWith(notifications: updated, unreadCount: newUnread);
+      _ref.invalidate(unreadNotificationCountProvider);
     } catch (_) {}
   }
 }
@@ -92,7 +96,7 @@ class NotificationListNotifier extends StateNotifier<NotificationListState> {
 final notificationListProvider = StateNotifierProvider.autoDispose<
     NotificationListNotifier, NotificationListState>((ref) {
   final repository = ref.watch(notificationRepositoryProvider);
-  return NotificationListNotifier(repository);
+  return NotificationListNotifier(repository, ref);
 });
 
 final unreadNotificationCountProvider =

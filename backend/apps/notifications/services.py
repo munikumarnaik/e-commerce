@@ -208,6 +208,18 @@ ORDER_STATUS_NOTIFICATION_MAP = {
 }
 
 
+def notify_payment_failed(order):
+    """Create a Payment Failed notification with no navigation URL."""
+    return create_notification(
+        user=order.user,
+        notification_type='PAYMENT_FAILED',
+        title='Payment Failed',
+        message=f'Payment for order {order.order_number} failed. Your cart has been restored — please try again.',
+        action_url='',
+        order=order,
+    )
+
+
 def notify_order_status_change(order, new_status):
     """Create a notification for an order status change."""
     mapping = ORDER_STATUS_NOTIFICATION_MAP.get(new_status)
