@@ -84,8 +84,7 @@ class NotificationListNotifier extends StateNotifier<NotificationListState> {
   Future<void> deleteNotification(String id) async {
     try {
       await _repository.deleteNotification(id);
-      final updated =
-          state.notifications.where((n) => n.id != id).toList();
+      final updated = state.notifications.where((n) => n.id != id).toList();
       final newUnread = updated.where((n) => !n.isRead).length;
       state = state.copyWith(notifications: updated, unreadCount: newUnread);
       _ref.invalidate(unreadNotificationCountProvider);
@@ -93,14 +92,14 @@ class NotificationListNotifier extends StateNotifier<NotificationListState> {
   }
 }
 
-final notificationListProvider = StateNotifierProvider.autoDispose<
-    NotificationListNotifier, NotificationListState>((ref) {
+final notificationListProvider =
+    StateNotifierProvider<NotificationListNotifier, NotificationListState>(
+        (ref) {
   final repository = ref.watch(notificationRepositoryProvider);
   return NotificationListNotifier(repository, ref);
 });
 
-final unreadNotificationCountProvider =
-    FutureProvider.autoDispose<int>((ref) async {
+final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
   final repository = ref.watch(notificationRepositoryProvider);
   return repository.getUnreadCount();
 });

@@ -8,6 +8,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/fcm_service.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -54,6 +55,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           FCMService.initialize(
             onTokenReceived: (token) async {
               ref.read(authProvider.notifier).registerFcmToken(token);
+            },
+            onNotificationReceived: () {
+              ref.invalidate(unreadNotificationCountProvider);
             },
           );
         }
@@ -145,11 +149,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onTap: () => context.push(RouteNames.register),
                         child: Text(
                           AppStrings.register,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     ],

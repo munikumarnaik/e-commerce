@@ -10,6 +10,7 @@ import '../../../../core/services/fcm_service.dart';
 import '../../../../shared/providers/storage_providers.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../widgets/splash_loading_bar.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -68,6 +69,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         if (mounted) {
           context.push(RouteNames.notifications);
         }
+      },
+      onNotificationReceived: () {
+        ref.invalidate(unreadNotificationCountProvider);
       },
     );
   }

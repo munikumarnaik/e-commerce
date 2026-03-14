@@ -16,12 +16,19 @@ class FCMService {
     importance: Importance.max,
   );
 
+  /// Callback invoked whenever a push message arrives (foreground).
+  /// Callers should use this to refresh the in-app notification list / badge.
+  static void Function()? _onNotificationReceived;
+
   /// Initialize FCM — safe to call, wraps everything in try-catch.
   static Future<void> initialize({
     required Future<void> Function(String token) onTokenReceived,
     void Function(RemoteMessage message)? onMessageOpenedApp,
+    void Function()? onNotificationReceived,
   }) async {
     if (_initialized) return;
+
+    _onNotificationReceived = onNotificationReceived;
 
     try {
       final messaging = FirebaseMessaging.instance;
@@ -51,17 +58,22 @@ class FCMService {
       // Listen for token refresh
       messaging.onTokenRefresh.listen(onTokenReceived);
 
-      // Foreground messages — show a local notification
-      FirebaseMessaging.onMessage.listen(_showLocalNotification);
+      // Foreground messages — show a local notification and refresh in-app list
+      FirebaseMessaging.onMessage.listen((message) {
+        _showLocalNotification(message);
+        _onNotificationReceived?.call();
+      });
 
       // Notification tapped while app was in background
       FirebaseMessaging.onMessageOpenedApp.listen((message) {
+        _onNotificationReceived?.call();
         onMessageOpenedApp?.call(message);
       });
 
       // App launched from terminated state via notification
       final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) {
+        _onNotificationReceived?.call();
         onMessageOpenedApp?.call(initialMessage);
       }
 
